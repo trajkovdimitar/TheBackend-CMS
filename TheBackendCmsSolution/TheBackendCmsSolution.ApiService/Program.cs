@@ -4,17 +4,14 @@ using TheBackendCmsSolution.ApiService.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add service defaults & Aspire components
 builder.AddServiceDefaults();
 
-// Add EF Core with PostgreSQL
 builder.Services.AddDbContext<CmsDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("contentdb") ??
                       "Host=localhost;Port=5433;Database=contentdb;Username=postgres;Password=postgres"));
 
 var app = builder.Build();
 
-// Delay migration until database is available
 async Task EnsureDatabaseMigratedAsync(IServiceProvider serviceProvider)
 {
     var maxRetries = 10;
@@ -39,22 +36,19 @@ async Task EnsureDatabaseMigratedAsync(IServiceProvider serviceProvider)
     }
 }
 
-// Run migration asynchronously before starting the app
 await EnsureDatabaseMigratedAsync(app.Services);
 
-// Configure the HTTP request pipeline
 app.MapDefaultEndpoints();
 
 app.MapGet("/", () => "Hello from TheBackend-CMS!");
 
-// API Endpoints
 app.MapPost("/content", async (CmsDbContext db, ContentItem item) =>
 {
     item.Id = Guid.NewGuid();
     item.CreatedAt = DateTime.UtcNow;
     db.ContentItems.Add(item);
     await db.SaveChangesAsync();
-    return Results.Created($"/content/{item.Id}", item);
+    return Results.Created($"/api/content/{item.Type}/{item.Id}", item);
 });
 
 app.MapGet("/content/{id:guid}", async (CmsDbContext db, Guid id) =>
@@ -67,6 +61,35 @@ app.MapGet("/content", async (CmsDbContext db) =>
 {
     var items = await db.ContentItems.ToListAsync();
     return Results.Ok(items);
+});
+
+app.MapGet("/content/{type}", async (string type, CmsDbContext db) =>
+{
+    var items = await db.ContentItems.Where(i => i.Type == type).ToListAsync();
+    return Results.Ok(items);
+});
+
+app.MapPut("/content/{id:guid}", async (Guid id, CmsDbContext db, ContentItem item) =>
+{
+    var existingItem = await db.ContentItems.FindAsync(id);
+    if (existingItem == null) return Results.NotFound();
+
+    existingItem.Title = item.Title;
+    existingItem.Body = item.Body;
+    existingItem.UpdatedAt = DateTime.UtcNow;
+
+    await db.SaveChangesAsync();
+    return Results.Ok(existingItem);
+});
+
+app.MapDelete("/content/{id:guid}", async (Guid id, CmsDbContext db) =>
+{
+    var item = await db.ContentItems.FindAsync(id);
+    if (item == null) return Results.NotFound();
+
+    db.ContentItems.Remove(item);
+    await db.SaveChangesAsync();
+    return Results.NoContent();
 });
 
 app.Run();
