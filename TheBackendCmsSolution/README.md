@@ -1,14 +1,14 @@
 TheBackend-CMS
 A cloud-agnostic, modular Content Management System (CMS) built with .NET 9 and .NET Aspire, inspired by Orchard Core. This project aims to provide a flexible, extensible CMS with features like content management, multi-tenancy, and headless APIs, deployable to any cloud provider (e.g., AWS, Azure, Google Cloud) or on-premises.
 Status
-Work in progress. Currently includes a minimal .NET Aspire solution with a CmsCore API and PostgreSQL database.
+Work in progress. Includes a ApiService minimal API with basic content management (create/read content items) and a PostgreSQL database.
 Prerequisites
 
 .NET 9 SDK: Version 9.0.301 or later. Download.
 Docker Desktop: For running PostgreSQL and other containerized services. Download.
 Git: For cloning the repository. Download.
-Code Editor: Visual Studio 2022 (17.9+), VS Code, or similar. Recommended: VS Code with C# extension.
-Optional: PostgreSQL client (e.g., pgAdmin, included via Aspire) for database management.
+Code Editor: Visual Studio 2022 (17.9+), VS Code, or similar. Recommended: Visual Studio 2022.
+Optional: PostgreSQL client (e.g., pgAdmin, included via Aspire) or API client (e.g., Postman, curl) for testing.
 
 Setup
 
@@ -38,21 +38,44 @@ Start Docker Desktop to support PostgreSQL containers.
 
 
 Run the .NET Aspire AppHost:
-dotnet run --project TheBackendCmsSolution.AppHost
+
+In Visual Studio: Set TheBackendCmsSolution.AppHost as the startup project and press F5.
+Or via command line:dotnet run --project TheBackendCmsSolution.AppHost
 
 
-This starts the Aspire dashboard, CmsCore API, and PostgreSQL database.
+This starts the Aspire dashboard, ApiService, Web, and PostgreSQL database.
 Open the dashboard at http://localhost:18888 (port may vary) to monitor services.
-Access the CmsCore API at http://localhost:<port> (e.g., http://localhost:5181) to see the "Hello from TheBackend-CMS!" response.
+Access the ApiService API at http://localhost:<port> (e.g., http://localhost:5181) to interact with endpoints.
 
 
 
+Using the API
+The ApiService API provides basic content management endpoints. Use an API client like Postman or curl to test.
+
+Create a Content Item:
+curl -X POST http://localhost:<port>/content -H "Content-Type: application/json" -d '{"Title":"My First Post","Body":"Hello, CMS!"}'
+
+Returns the created item with a unique Id.
+
+Retrieve a Content Item:
+curl http://localhost:<port>/content/{id}
+
+Returns the item by Id or 404 if not found.
+
+Retrieve All Content Items:
+curl http://localhost:<port>/content
+
+Returns a list of all content items or an empty list if none exist.
+
+
+See docs/api.md for detailed API documentation.
 Project Structure
 
-TheBackendCmsSolution.AppHost: Orchestrates services (e.g., CmsCore, PostgreSQL).
+TheBackendCmsSolution.AppHost: Orchestrates services (e.g., ApiService, Web, PostgreSQL).
 TheBackendCmsSolution.ServiceDefaults: Shared configurations (telemetry, health checks).
-TheBackendCmsSolution.CmsCore: Minimal API for CMS functionality (work in progress).
-docs/: Detailed documentation (coming soon).
+TheBackendCmsSolution.ApiService: Minimal API for CMS functionality (content management).
+TheBackendCmsSolution.Web: Web frontend (work in progress).
+docs/: Detailed documentation.
 
 Contributing
 Contributions are welcome! See CONTRIBUTING.md (TBD) for guidelines.

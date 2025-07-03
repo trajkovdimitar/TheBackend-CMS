@@ -1,9 +1,12 @@
+using Aspire.Hosting;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
-var apiService = builder.AddProject<Projects.TheBackendCmsSolution_ApiService>("apiservice");
-
+var postgres = builder.AddPostgres("cmsdb").WithPgAdmin();
+var db = postgres.AddDatabase("contentdb");
+var apiService = builder.AddProject<Projects.TheBackendCmsSolution_ApiService>("apiservice")
+                       .WithReference(db);
 builder.AddProject<Projects.TheBackendCmsSolution_Web>("webfrontend")
-    .WithExternalHttpEndpoints()
-    .WithReference(apiService);
+       .WithReference(apiService);
 
 builder.Build().Run();

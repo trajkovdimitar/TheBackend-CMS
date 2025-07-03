@@ -10,12 +10,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TheBackendCmsSolution.ApiService\TheBackendCmsSolution.ApiService.csproj" />
     <ProjectReference Include="..\TheBackendCmsSolution.Web\TheBackendCmsSolution.Web.csproj" />
+	  <ProjectReference Include="..\TheBackendCmsSolution.ApiService\TheBackendCmsSolution.ApiService.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.AppHost" Version="8.2.2" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="8.2.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.17">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
 </Project>
