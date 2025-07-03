@@ -8,4 +8,5 @@ public class ContentItem
     public string Type { get; set; } = "generic";
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    public ContentType ContentType { get; set; }
 }
