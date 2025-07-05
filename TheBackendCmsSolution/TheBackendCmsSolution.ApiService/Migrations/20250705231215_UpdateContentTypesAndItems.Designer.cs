@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TheBackendCmsSolution.ApiService.Data;
@@ -12,9 +13,11 @@ using TheBackendCmsSolution.ApiService.Data;
 namespace TheBackendCmsSolution.ApiService.Migrations
 {
     [DbContext(typeof(CmsDbContext))]
-    partial class CmsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250705231215_UpdateContentTypesAndItems")]
+    partial class UpdateContentTypesAndItems
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -66,7 +69,7 @@ namespace TheBackendCmsSolution.ApiService.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Dictionary<string, object>>("Fields")
+                    b.Property<Dictionary<string, string>>("Fields")
                         .IsRequired()
                         .HasColumnType("jsonb");
 

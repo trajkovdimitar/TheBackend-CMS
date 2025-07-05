@@ -1,12 +1,15 @@
-﻿namespace TheBackendCmsSolution.ApiService.Models;
+﻿using System;
 
-public class ContentItem
+namespace TheBackendCmsSolution.ApiService.Models
 {
-    public Guid Id { get; set; }
-    public string Title { get; set; } = string.Empty;
-    public string Body { get; set; } = string.Empty;
-    public string Type { get; set; } = "generic";
-    public DateTime CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
-    public ContentType ContentType { get; set; }
+    public class ContentItem
+    {
+        public Guid Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public Guid ContentTypeId { get; set; }
+        public ContentType ContentType { get; set; } = null!;
+        public Dictionary<string, object> Fields { get; set; } = new();
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+    }
 }

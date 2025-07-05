@@ -1,28 +1,70 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
+using Npgsql;
 using TheBackendCmsSolution.ApiService.Data;
+using TheBackendCmsSolution.ApiService.Dtos;
 using TheBackendCmsSolution.ApiService.Models;
-using Microsoft.AspNetCore.Mvc; // For ControllerBase
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add service defaults & Aspire components
 builder.AddServiceDefaults();
 
-// Add EF Core with PostgreSQL
+// Add EF Core with PostgreSQL and enable dynamic JSON
+var connectionString = builder.Configuration.GetConnectionString("contentdb") ??
+                       "Host=localhost;Port=5433;Database=contentdb;Username=postgres;Password=postgres";
+var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+dataSourceBuilder.EnableDynamicJson();
 builder.Services.AddDbContext<CmsDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("contentdb") ??
-                      "Host=localhost;Port=5433;Database=contentdb;Username=postgres;Password=postgres"));
+    options.UseNpgsql(dataSourceBuilder.Build()));
 
-// Configure JSON options to handle cycles (though we use projections)
-builder.Services.Configure<JsonOptions>(options =>
+// Add logging
+builder.Services.AddLogging();
+
+// Configure JSON options (no reference metadata)
+builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
 {
-    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
-    options.JsonSerializerOptions.MaxDepth = 64; // Default, can adjust if needed
+    options.SerializerOptions.ReferenceHandler = null;
+    options.SerializerOptions.MaxDepth = 64;
 });
 
 var app = builder.Build();
 
-// Delay migration until database is available
+// Validation helper method
+static ValidationProblemDetails ValidateDto(object dto, ILogger logger)
+{
+    var validationContext = new ValidationContext(dto);
+    var validationResults = new List<ValidationResult>();
+    bool isValid = Validator.TryValidateObject(dto, validationContext, validationResults, true);
+
+    if (!isValid)
+    {
+        var errors = new Dictionary<string, string[]>();
+        foreach (var result in validationResults)
+        {
+            foreach (var memberName in result.MemberNames)
+            {
+                if (!errors.ContainsKey(memberName))
+                {
+                    errors[memberName] = new[] { result.ErrorMessage ?? "Invalid value" };
+                }
+            }
+        }
+        logger.LogWarning("Validation failed for DTO: {Errors}", errors);
+        return new ValidationProblemDetails(errors)
+        {
+            Status = 400,
+            Title = "Validation Failed"
+        };
+    }
+    return null;
+}
+
+// Migration with retry logic
 async Task EnsureDatabaseMigratedAsync(IServiceProvider serviceProvider)
 {
     var maxRetries = 10;
@@ -34,7 +76,7 @@ async Task EnsureDatabaseMigratedAsync(IServiceProvider serviceProvider)
         {
             using var scope = serviceProvider.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<CmsDbContext>();
-            dbContext.Database.Migrate();
+            await dbContext.Database.MigrateAsync();
             Console.WriteLine("Database migration completed successfully.");
             break;
         }
@@ -47,129 +89,221 @@ async Task EnsureDatabaseMigratedAsync(IServiceProvider serviceProvider)
     }
 }
 
-// Seed ContentTypes if not exists
+// Seed ContentTypes
 async Task SeedContentTypesAsync(IServiceProvider serviceProvider)
 {
     using var scope = serviceProvider.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<CmsDbContext>();
 
-    if (!dbContext.ContentTypes.Any())
+    if (!await dbContext.ContentTypes.AnyAsync())
     {
         dbContext.ContentTypes.AddRange(
-            new ContentType { Name = "blogpost", DisplayName = "Blog Post" },
-            new ContentType { Name = "page", DisplayName = "Page" }
+            new ContentType
+            {
+                Id = Guid.NewGuid(),
+                Name = "blogpost",
+                DisplayName = "Blog Post",
+                Fields = new Dictionary<string, object>
+                {
+                    { "Body", "string" },
+                    { "Tags", "string[]" }
+                },
+                CreatedAt = DateTime.UtcNow
+            },
+            new ContentType
+            {
+                Id = Guid.NewGuid(),
+                Name = "page",
+                DisplayName = "Page",
+                Fields = new Dictionary<string, object>
+                {
+                    { "Content", "string" }
+                },
+                CreatedAt = DateTime.UtcNow
+            }
         );
         await dbContext.SaveChangesAsync();
         Console.WriteLine("ContentTypes seeded successfully.");
     }
 }
 
-// Run migration and seeding asynchronously before starting the app
+// Run migration and seeding before starting the app
 await EnsureDatabaseMigratedAsync(app.Services);
 await SeedContentTypesAsync(app.Services);
 
-// Configure the HTTP request pipeline
-app.MapDefaultEndpoints();
-
-app.MapGet("/", () => "Hello from TheBackend-CMS!");
-
-// API Endpoints
-app.MapPost("/content", async (CmsDbContext db, ContentItem item) =>
+// Content Type Endpoints
+app.MapPost("/content-types", async (ContentTypeDto dto, CmsDbContext db, ILogger<Program> logger) =>
 {
-    item.Id = Guid.NewGuid();
-    item.CreatedAt = DateTime.UtcNow;
-    db.ContentItems.Add(item);
+    var validationErrors = ValidateDto(dto, logger);
+    if (validationErrors != null)
+    {
+        return Results.BadRequest(validationErrors);
+    }
+
+    var contentType = new ContentType
+    {
+        Id = Guid.NewGuid(),
+        Name = dto.Name,
+        DisplayName = dto.DisplayName,
+        Fields = dto.Fields,
+        CreatedAt = DateTime.UtcNow
+    };
+
+    db.ContentTypes.Add(contentType);
     await db.SaveChangesAsync();
-    return Results.Created($"/api/content/{item.Type}/{item.Id}", item);
+    logger.LogInformation("Created content type {Id}", contentType.Id);
+    return Results.Created($"/content-types/{contentType.Id}", contentType);
 });
 
-app.MapGet("/content/{id:guid}", async (Guid id, CmsDbContext db) =>
+app.MapGet("/content-types", async (CmsDbContext db, ILogger<Program> logger) =>
+{
+    logger.LogInformation("Retrieving all content types");
+    return await db.ContentTypes.ToListAsync();
+});
+
+// Content Item Endpoints
+app.MapGet("/content", async (CmsDbContext db, ILogger<Program> logger) =>
+{
+    logger.LogInformation("Retrieving all content items");
+    var items = await db.ContentItems
+        .Include(c => c.ContentType)
+        .Select(c => new
+        {
+            c.Id,
+            c.Title,
+            c.ContentTypeId,
+            ContentType = new { c.ContentType.Name, c.ContentType.DisplayName },
+            c.Fields,
+            c.CreatedAt,
+            c.UpdatedAt
+        })
+        .ToListAsync();
+    return Results.Ok(items);
+});
+
+app.MapGet("/content/{id:guid}", async (Guid id, CmsDbContext db, ILogger<Program> logger) =>
 {
     var item = await db.ContentItems
-        .Where(i => i.Id == id)
-        .Select(i => new
+        .Include(c => c.ContentType)
+        .Where(c => c.Id == id)
+        .Select(c => new
         {
-            i.Id,
-            i.Title,
-            i.Body,
-            i.Type,
-            i.CreatedAt,
-            i.UpdatedAt,
-            ContentType = new { i.ContentType.Name, i.ContentType.DisplayName }
+            c.Id,
+            c.Title,
+            c.ContentTypeId,
+            ContentType = new { c.ContentType.Name, c.ContentType.DisplayName },
+            c.Fields,
+            c.CreatedAt,
+            c.UpdatedAt
         })
         .FirstOrDefaultAsync();
-    return item != null ? Results.Ok(item) : Results.NotFound();
+    if (item == null)
+    {
+        logger.LogWarning("Content item {Id} not found", id);
+        return Results.NotFound();
+    }
+    return Results.Ok(item);
 });
 
-app.MapGet("/content", async (CmsDbContext db) =>
+app.MapGet("/api/content/{type}", async (string type, CmsDbContext db, ILogger<Program> logger) =>
 {
-    var items = await db.ContentItems
-        .Select(i => new
-        {
-            i.Id,
-            i.Title,
-            i.Body,
-            i.Type,
-            i.CreatedAt,
-            i.UpdatedAt,
-            ContentType = new { i.ContentType.Name, i.ContentType.DisplayName }
-        })
-        .ToListAsync();
-    return Results.Ok(items);
-});
-
-app.MapGet("/api/content/{type}", async (string type, CmsDbContext db) =>
-{
-    var contentType = await db.ContentTypes.FindAsync(type);
+    var contentType = await db.ContentTypes.FirstOrDefaultAsync(ct => ct.Name == type);
     if (contentType == null)
     {
-        return Results.NotFound($"Content type '{type}' not found.");
+        logger.LogWarning("Content type {Type} not found", type);
+        return Results.NotFound();
     }
     var items = await db.ContentItems
-        .Where(i => i.Type == type)
-        .Select(i => new
+        .Where(c => c.ContentTypeId == contentType.Id)
+        .Include(c => c.ContentType)
+        .Select(c => new
         {
-            i.Id,
-            i.Title,
-            i.Body,
-            i.Type,
-            i.CreatedAt,
-            i.UpdatedAt,
-            ContentType = new { i.ContentType.Name, i.ContentType.DisplayName }
+            c.Id,
+            c.Title,
+            c.ContentTypeId,
+            ContentType = new { c.ContentType.Name, c.ContentType.DisplayName },
+            c.Fields,
+            c.CreatedAt,
+            c.UpdatedAt
         })
         .ToListAsync();
     return Results.Ok(items);
 });
 
-app.MapPut("/content/{id:guid}", async (Guid id, CmsDbContext db, ContentItem item) =>
+app.MapPost("/content", async (ContentItemDto dto, CmsDbContext db, ILogger<Program> logger) =>
 {
-    var existingItem = await db.ContentItems.FindAsync(id);
-    if (existingItem == null) return Results.NotFound();
-
-    existingItem.Title = item.Title;
-    existingItem.Body = item.Body;
-    existingItem.UpdatedAt = DateTime.UtcNow;
-
-    await db.SaveChangesAsync();
-    return Results.Ok(new
+    var validationErrors = ValidateDto(dto, logger);
+    if (validationErrors != null)
     {
-        existingItem.Id,
-        existingItem.Title,
-        existingItem.Body,
-        existingItem.Type,
-        existingItem.CreatedAt,
-        existingItem.UpdatedAt,
-        ContentType = new { existingItem.ContentType.Name, existingItem.ContentType.DisplayName }
-    });
+        return Results.BadRequest(validationErrors);
+    }
+
+    var contentType = await db.ContentTypes.FindAsync(dto.ContentTypeId);
+    if (contentType == null)
+    {
+        logger.LogWarning("Content type {Id} not found", dto.ContentTypeId);
+        return Results.BadRequest(new { Error = "Invalid ContentTypeId" });
+    }
+
+    var item = new ContentItem
+    {
+        Id = Guid.NewGuid(),
+        Title = dto.Title,
+        ContentTypeId = dto.ContentTypeId,
+        Fields = dto.Fields,
+        CreatedAt = DateTime.UtcNow
+    };
+
+    db.ContentItems.Add(item);
+    await db.SaveChangesAsync();
+    logger.LogInformation("Created content item {Id}", item.Id);
+    return Results.Created($"/content/{item.Id}", item);
 });
 
-app.MapDelete("/content/{id:guid}", async (Guid id, CmsDbContext db) =>
+app.MapPut("/content/{id:guid}", async (Guid id, ContentItemDto dto, CmsDbContext db, ILogger<Program> logger) =>
+{
+    var validationErrors = ValidateDto(dto, logger);
+    if (validationErrors != null)
+    {
+        return Results.BadRequest(validationErrors);
+    }
+
+    var item = await db.ContentItems.FindAsync(id);
+    if (item == null)
+    {
+        logger.LogWarning("Content item {Id} not found for update", id);
+        return Results.NotFound();
+    }
+
+    var contentType = await db.ContentTypes.FindAsync(dto.ContentTypeId);
+    if (contentType == null)
+    {
+        logger.LogWarning("Content type {Id} not found", dto.ContentTypeId);
+        return Results.BadRequest(new { Error = "Invalid ContentTypeId" });
+    }
+
+    item.Title = dto.Title;
+    item.ContentTypeId = dto.ContentTypeId;
+    item.Fields = dto.Fields;
+    item.UpdatedAt = DateTime.UtcNow;
+
+    await db.SaveChangesAsync();
+    logger.LogInformation("Updated content item {Id}", id);
+    return Results.Ok(item);
+});
+
+app.MapDelete("/content/{id:guid}", async (Guid id, CmsDbContext db, ILogger<Program> logger) =>
 {
     var item = await db.ContentItems.FindAsync(id);
-    if (item == null) return Results.NotFound();
+    if (item == null)
+    {
+        logger.LogWarning("Content item {Id} not found for deletion", id);
+        return Results.NotFound();
+    }
 
     db.ContentItems.Remove(item);
     await db.SaveChangesAsync();
+    logger.LogInformation("Deleted content item {Id}", id);
     return Results.NoContent();
 });
 
