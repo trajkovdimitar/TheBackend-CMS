@@ -6,13 +6,13 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using TheBackendCmsSolution.ApiService.Data;
+using TheBackendCmsSolution.Modules.Content.Data;
 
 #nullable disable
 
-namespace TheBackendCmsSolution.ApiService.Migrations
+namespace TheBackendCmsSolution.Modules.Content.Migrations
 {
-    [DbContext(typeof(CmsDbContext))]
+    [DbContext(typeof(ContentDbContext))]
     [Migration("20250705230204_AddContentTypes")]
     partial class AddContentTypes
     {
@@ -26,7 +26,7 @@ namespace TheBackendCmsSolution.ApiService.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("TheBackendCmsSolution.ApiService.Models.ContentItem", b =>
+            modelBuilder.Entity("TheBackendCmsSolution.Modules.Content.Models.ContentItem", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -56,7 +56,7 @@ namespace TheBackendCmsSolution.ApiService.Migrations
                     b.ToTable("ContentItems");
                 });
 
-            modelBuilder.Entity("TheBackendCmsSolution.ApiService.Models.ContentType", b =>
+            modelBuilder.Entity("TheBackendCmsSolution.Modules.Content.Models.ContentType", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -78,9 +78,9 @@ namespace TheBackendCmsSolution.ApiService.Migrations
                     b.ToTable("ContentTypes");
                 });
 
-            modelBuilder.Entity("TheBackendCmsSolution.ApiService.Models.ContentItem", b =>
+            modelBuilder.Entity("TheBackendCmsSolution.Modules.Content.Models.ContentItem", b =>
                 {
-                    b.HasOne("TheBackendCmsSolution.ApiService.Models.ContentType", "ContentType")
+                    b.HasOne("TheBackendCmsSolution.Modules.Content.Models.ContentType", "ContentType")
                         .WithMany()
                         .HasForeignKey("ContentTypeId")
                         .OnDelete(DeleteBehavior.Cascade)

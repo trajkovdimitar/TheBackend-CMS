@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace TheBackendCmsSolution.ApiService.Migrations
+namespace TheBackendCmsSolution.Modules.Content.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration
