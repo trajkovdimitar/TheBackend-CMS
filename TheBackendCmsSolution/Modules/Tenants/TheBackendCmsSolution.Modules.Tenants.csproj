@@ -16,6 +16,5 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../Abstractions/TheBackendCmsSolution.Modules.Abstractions.csproj" />
-    <ProjectReference Include="../Tenants/TheBackendCmsSolution.Modules.Tenants.csproj" />
   </ItemGroup>
 </Project>

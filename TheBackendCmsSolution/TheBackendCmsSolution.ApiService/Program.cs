@@ -1,4 +1,5 @@
 using TheBackendCmsSolution.Modules.Abstractions;
+using TheBackendCmsSolution.Modules.Tenants;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,8 @@ foreach (var module in modules)
 }
 
 var app = builder.Build();
+
+app.UseMiddleware<TheBackendCmsSolution.Modules.Tenants.TenantResolutionMiddleware>();
 
 foreach (var module in modules)
 {

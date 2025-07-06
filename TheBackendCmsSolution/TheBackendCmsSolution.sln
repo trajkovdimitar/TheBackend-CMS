@@ -18,6 +18,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TheBackendCmsSolution.Modul
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TheBackendCmsSolution.Modules.Taxonomy", "Modules\Taxonomy\TheBackendCmsSolution.Modules.Taxonomy.csproj", "{3BD5038F-3405-4BD3-BED5-A28A00E00234}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TheBackendCmsSolution.Modules.Tenants", "Modules\Tenants\TheBackendCmsSolution.Modules.Tenants.csproj", "{68ADEA4D-A744-4B01-BEDB-83947CCF9BE7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -56,6 +58,10 @@ Global
                 {3BD5038F-3405-4BD3-BED5-A28A00E00234}.Debug|Any CPU.Build.0 = Debug|Any CPU
                 {3BD5038F-3405-4BD3-BED5-A28A00E00234}.Release|Any CPU.ActiveCfg = Release|Any CPU
                 {3BD5038F-3405-4BD3-BED5-A28A00E00234}.Release|Any CPU.Build.0 = Release|Any CPU
+                {68ADEA4D-A744-4B01-BEDB-83947CCF9BE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+                {68ADEA4D-A744-4B01-BEDB-83947CCF9BE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+                {68ADEA4D-A744-4B01-BEDB-83947CCF9BE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+                {68ADEA4D-A744-4B01-BEDB-83947CCF9BE7}.Release|Any CPU.Build.0 = Release|Any CPU
         EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

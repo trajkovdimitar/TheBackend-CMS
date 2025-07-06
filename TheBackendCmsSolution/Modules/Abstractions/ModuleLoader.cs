@@ -27,7 +27,21 @@ public static class ModuleLoader
         }
 
         var moduleTypes = assemblies
-            .SelectMany(a => a.GetTypes())
+            .SelectMany(a =>
+            {
+                try
+                {
+                    return a.GetTypes();
+                }
+                catch (ReflectionTypeLoadException ex)
+                {
+                    return ex.Types.Where(t => t != null).Cast<Type>();
+                }
+                catch
+                {
+                    return Array.Empty<Type>();
+                }
+            })
             .Where(t => typeof(ICmsModule).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract);
 
         return moduleTypes.Select(t => (ICmsModule)Activator.CreateInstance(t)!);
