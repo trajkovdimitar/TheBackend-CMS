@@ -6,23 +6,45 @@ public class ContentApiClient(HttpClient httpClient)
 {
     public async Task<List<ContentTypeResponse>> GetContentTypesAsync(CancellationToken cancellationToken = default)
     {
-        var result = await httpClient.GetFromJsonAsync<List<ContentTypeResponse>>("/content-types", cancellationToken);
-        return result ?? [];
+        try
+        {
+            var result = await httpClient.GetFromJsonAsync<List<ContentTypeResponse>>("/content-types", cancellationToken);
+            return result ?? [];
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return [];
+        }
     }
 
     public async Task<ContentTypeResponse?> GetContentTypeAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await httpClient.GetFromJsonAsync<ContentTypeResponse>($"/content-types/{id}", cancellationToken);
+        try
+        {
+            return await httpClient.GetFromJsonAsync<ContentTypeResponse>($"/content-types/{id}", cancellationToken);
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
     }
 
     public async Task CreateContentTypeAsync(ContentTypeDto dto, CancellationToken cancellationToken = default)
     {
-        await httpClient.PostAsJsonAsync("/content-types", dto, cancellationToken);
+        var response = await httpClient.PostAsJsonAsync("/content-types", dto, cancellationToken);
+        response.EnsureSuccessStatusCode();
     }
 
     public async Task UpdateContentTypeAsync(Guid id, ContentTypeDto dto, CancellationToken cancellationToken = default)
     {
-        await httpClient.PutAsJsonAsync($"/content-types/{id}", dto, cancellationToken);
+        var response = await httpClient.PutAsJsonAsync($"/content-types/{id}", dto, cancellationToken);
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task DeleteContentTypeAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.DeleteAsync($"/content-types/{id}", cancellationToken);
+        response.EnsureSuccessStatusCode();
     }
 }
 

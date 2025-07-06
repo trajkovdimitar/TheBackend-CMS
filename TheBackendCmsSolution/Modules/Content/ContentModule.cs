@@ -94,6 +94,20 @@ public class ContentModule : ICmsModule
             return Results.Ok(existing);
         });
 
+        group.MapDelete("/content-types/{id:guid}", async (Guid id, ContentDbContext db, ILogger<ContentModule> logger) =>
+        {
+            var ct = await db.ContentTypes.FindAsync(id);
+            if (ct is null)
+            {
+                logger.LogWarning("Content type {Id} not found for deletion", id);
+                return Results.NotFound();
+            }
+            db.ContentTypes.Remove(ct);
+            await db.SaveChangesAsync();
+            logger.LogInformation("Deleted content type {Id}", id);
+            return Results.NoContent();
+        });
+
         group.MapGet("/content", async (ContentDbContext db, ILogger<ContentModule> logger) =>
         {
             logger.LogInformation("Retrieving all content items");

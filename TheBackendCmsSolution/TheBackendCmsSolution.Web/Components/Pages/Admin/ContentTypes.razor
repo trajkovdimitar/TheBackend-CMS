@@ -26,7 +26,10 @@ else
                 <td>@ct.Name</td>
                 <td>@ct.DisplayName</td>
                 <td>@string.Join(", ", ct.Fields.Keys)</td>
-                <td><button class="btn btn-sm btn-secondary" @onclick="() => Edit(ct)">Edit</button></td>
+                <td>
+                    <button class="btn btn-sm btn-secondary me-1" @onclick="() => Edit(ct)">Edit</button>
+                    <button class="btn btn-sm btn-danger" @onclick="() => DeleteAsync(ct.Id)">Delete</button>
+                </td>
             </tr>
         }
         </tbody>
@@ -103,6 +106,12 @@ else
             await Api.UpdateContentTypeAsync(editingId.Value, dto.ToDto());
         }
         ResetForm();
+        await LoadAsync();
+    }
+
+    private async Task DeleteAsync(Guid id)
+    {
+        await Api.DeleteContentTypeAsync(id);
         await LoadAsync();
     }
 

@@ -164,6 +164,9 @@ Retrieves a content type by ID.
 PUT /content-types/{id}
 Updates an existing content type.
 
+DELETE /content-types/{id}
+Deletes a content type.
+
 
 
 Notes
