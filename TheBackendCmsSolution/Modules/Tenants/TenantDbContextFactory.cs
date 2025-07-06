@@ -9,7 +9,7 @@ public class TenantDbContextFactory : IDesignTimeDbContextFactory<TenantDbContex
     public TenantDbContext CreateDbContext(string[] args)
     {
         var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
-        var connectionString = "Host=localhost;Port=5433;Database=tenantsdb;Username=postgres;Password=postgres";
+        var connectionString = "Host=localhost;Port=5432;Database=tenantsdb;Username=postgres;Password=postgres";
         var dataSourceBuilder = new Npgsql.NpgsqlDataSourceBuilder(connectionString);
         dataSourceBuilder.EnableDynamicJson();
         optionsBuilder.UseNpgsql(dataSourceBuilder.Build());

@@ -17,11 +17,15 @@ public class TenancyModule : ICmsModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration config)
     {
-        var connectionString = config.GetConnectionString("tenantsdb") ??
-                               "Host=localhost;Port=5433;Database=tenantsdb;Username=postgres;Password=postgres";
-        var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
-        dataSourceBuilder.EnableDynamicJson();
-        services.AddDbContext<TenantDbContext>(options => options.UseNpgsql(dataSourceBuilder.Build()));
+        services.AddDbContext<TenantDbContext>((sp, options) =>
+        {
+            var configuration = sp.GetRequiredService<IConfiguration>();
+            var connectionString = configuration.GetConnectionString("tenantsdb") ??
+                                   "Host=localhost;Port=5432;Database=tenantsdb;Username=postgres;Password=postgres";
+            var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+            dataSourceBuilder.EnableDynamicJson();
+            options.UseNpgsql(dataSourceBuilder.Build());
+        });
         services.AddScoped<ITenantResolver, TenantResolver>();
         services.AddScoped<ITenantAccessor, TenantAccessor>();
     }
