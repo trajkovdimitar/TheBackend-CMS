@@ -68,3 +68,7 @@ public class TenantResolutionMiddleware
 - Add endpoints to create and manage tenants.
 - Update modules to read connection strings from the resolved tenant.
 - Write integration tests for tenant isolation.
+
+## License
+This project is licensed under the [MIT License](../../LICENSE).
+
