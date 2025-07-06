@@ -1,14 +1,18 @@
+using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using TheBackendCmsSolution.Modules.Content;
+using TheBackendCmsSolution.Modules.Content.Data;
+using TheBackendCmsSolution.Modules.Tenants;
 using TheBackendCmsSolution.Modules.Tenants.Data;
 using TheBackendCmsSolution.Modules.Tenants.Models;
 using TheBackendCmsSolution.Modules.Tenants.Services;
-using TheBackendCmsSolution.Modules.Tenants;
-using TheBackendCmsSolution.Modules.Content;
-using TheBackendCmsSolution.Modules.Content.Data;
+using TheBackendCmsSolution.Modules.Abstractions;
+using Xunit;
 
 namespace TheBackendCmsSolution.Tests;
 
@@ -17,7 +21,7 @@ public class TenantTests
     private static TenantDbContext CreateTenantDbContext()
     {
         var options = new DbContextOptionsBuilder<TenantDbContext>()
-            .UseInMemoryDatabase("tenants")
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         return new TenantDbContext(options);
     }
@@ -40,23 +44,36 @@ public class TenantTests
         Assert.Equal("t2", tenant!.Name);
     }
 
-
     [Fact]
     public async Task Middleware_Sets_Tenant_On_HttpContext_And_Accessor()
     {
         using var db = CreateTenantDbContext();
-        var tenant = new Tenant { Id = Guid.NewGuid(), Name = "t", Host = "tenant.com", ConnectionString = "cs" };
+        var tenant = new Tenant { Id = Guid.NewGuid(), Name = "t", Host = "tenant.com", ConnectionString = "Host=memory;Database=tenantdb" };
         db.Tenants.Add(tenant);
         await db.SaveChangesAsync();
 
         var resolver = new TenantResolver(db);
         var accessor = new TenantAccessor();
+
+        var baseServices = new ServiceCollection();
+        baseServices.AddSingleton<ITenantAccessor>(accessor);
+        baseServices.AddScoped(_ => "DummyService");
+
+        var configuration = new ConfigurationBuilder().Build();
+        var modules = new List<ICmsModule>
+        {
+            new ContentModule() 
+        };
+
+        var rootProvider = baseServices.BuildServiceProvider();
+
+        var providerFactory = new TenantServiceProviderFactory(baseServices, configuration, modules, rootProvider);
         var middleware = new TenantResolutionMiddleware(_ => Task.CompletedTask);
 
         var context = new DefaultHttpContext();
         context.Request.Host = new HostString("tenant.com");
 
-        await middleware.InvokeAsync(context, resolver, accessor);
+        await middleware.InvokeAsync(context, resolver, accessor, providerFactory);
 
         Assert.NotNull(accessor.CurrentTenant);
         Assert.Equal(tenant.Id, accessor.CurrentTenant!.Id);
