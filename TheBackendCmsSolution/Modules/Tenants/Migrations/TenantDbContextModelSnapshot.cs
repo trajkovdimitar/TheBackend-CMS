@@ -32,6 +32,10 @@ namespace TheBackendCmsSolution.Modules.Tenants.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string[]>("EnabledModules")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
                     b.Property<string>("Host")
                         .HasColumnType("text");
 

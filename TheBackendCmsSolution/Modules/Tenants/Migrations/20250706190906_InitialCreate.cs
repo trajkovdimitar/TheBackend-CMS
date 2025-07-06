@@ -19,7 +19,8 @@ namespace TheBackendCmsSolution.Modules.Tenants.Migrations
                     Name = table.Column<string>(type: "text", nullable: false),
                     Host = table.Column<string>(type: "text", nullable: true),
                     UrlPrefix = table.Column<string>(type: "text", nullable: true),
-                    ConnectionString = table.Column<string>(type: "text", nullable: false)
+                    ConnectionString = table.Column<string>(type: "text", nullable: false),
+                    EnabledModules = table.Column<string[]>(type: "text[]", nullable: false)
                 },
                 constraints: table =>
                 {

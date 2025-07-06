@@ -7,4 +7,5 @@ public class Tenant
     public string? Host { get; set; }
     public string? UrlPrefix { get; set; }
     public string ConnectionString { get; set; } = string.Empty;
+    public List<string> EnabledModules { get; set; } = new();
 }
