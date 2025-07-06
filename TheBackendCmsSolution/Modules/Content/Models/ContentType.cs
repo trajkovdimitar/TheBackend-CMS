@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace TheBackendCmsSolution.ApiService.Models
+namespace TheBackendCmsSolution.Modules.Content.Models
 {
     public class ContentType
     {

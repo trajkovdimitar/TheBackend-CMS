@@ -1,14 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using TheBackendCmsSolution.ApiService.Models;
+using TheBackendCmsSolution.Modules.Content.Models;
 
-namespace TheBackendCmsSolution.ApiService.Data
+namespace TheBackendCmsSolution.Modules.Content.Data
 {
-    public class CmsDbContext : DbContext
+    public class ContentDbContext : DbContext
     {
         public DbSet<ContentType> ContentTypes { get; set; }
         public DbSet<ContentItem> ContentItems { get; set; }
 
-        public CmsDbContext(DbContextOptions<CmsDbContext> options)
+        public ContentDbContext(DbContextOptions<ContentDbContext> options)
             : base(options)
         {
         }

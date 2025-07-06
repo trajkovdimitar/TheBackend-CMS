@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace TheBackendCmsSolution.ApiService.Migrations
+namespace TheBackendCmsSolution.Modules.Content.Migrations
 {
     /// <inheritdoc />
     public partial class AddContentType : Migration

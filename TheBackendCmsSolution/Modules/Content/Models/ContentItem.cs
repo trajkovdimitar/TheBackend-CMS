@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TheBackendCmsSolution.ApiService.Models
+namespace TheBackendCmsSolution.Modules.Content.Models
 {
     public class ContentItem
     {
