@@ -94,5 +94,7 @@ docs/: Detailed documentation.
 
 Contributing
 Contributions are welcome! See CONTRIBUTING.md (TBD) for guidelines.
-License
-MIT License (TBD).
+
+## License
+
+This project is licensed under the [MIT License](../LICENSE).
