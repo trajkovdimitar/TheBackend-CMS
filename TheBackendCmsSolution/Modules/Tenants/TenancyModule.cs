@@ -10,6 +10,7 @@ using TheBackendCmsSolution.Modules.Abstractions;
 using TheBackendCmsSolution.Modules.Tenants.Data;
 using TheBackendCmsSolution.Modules.Tenants.Models;
 using TheBackendCmsSolution.Modules.Tenants.Services;
+using System.Linq;
 
 namespace TheBackendCmsSolution.Modules.Tenants;
 
@@ -59,7 +60,10 @@ public class TenancyModule : ICmsModule
             {
                 Id = Guid.NewGuid(),
                 Name = "Default",
-                ConnectionString = defaultConn
+                ConnectionString = defaultConn,
+                EnabledModules = ModuleLoader.DiscoverModules()
+                    .Select(m => m.GetType().FullName!)
+                    .ToList()
             });
             db.SaveChanges();
         }
