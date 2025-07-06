@@ -7,6 +7,11 @@ using TheBackendCmsSolution.Modules.Content.Data;
 using TheBackendCmsSolution.Modules.Content.Dtos;
 using TheBackendCmsSolution.Modules.Content.Models;
 using Npgsql;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Http;
+using System.ComponentModel.DataAnnotations;
 
 namespace TheBackendCmsSolution.Modules.Content;
 
