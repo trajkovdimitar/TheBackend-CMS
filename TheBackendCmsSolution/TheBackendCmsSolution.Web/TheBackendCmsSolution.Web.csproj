@@ -8,6 +8,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TheBackendCmsSolution.ServiceDefaults\TheBackendCmsSolution.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Modules\Abstractions\TheBackendCmsSolution.Modules.Abstractions.csproj" />
+    <ProjectReference Include="..\Modules\Content\TheBackendCmsSolution.Modules.Content.csproj" />
+    <ProjectReference Include="..\Modules\Taxonomy\TheBackendCmsSolution.Modules.Taxonomy.csproj" />
+    <ProjectReference Include="..\Modules\Users\TheBackendCmsSolution.Modules.Users.csproj" />
   </ItemGroup>
 
 </Project>

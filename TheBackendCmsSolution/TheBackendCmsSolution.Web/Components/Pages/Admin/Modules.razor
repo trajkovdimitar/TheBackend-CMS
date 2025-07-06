@@ -1,0 +1,21 @@
+@page "/admin/modules"
+@rendermode InteractiveServer
+@using TheBackendCmsSolution.Modules.Abstractions
+
+<h1>Modules</h1>
+
+<ul>
+@foreach (var module in modules)
+{
+    <li>@module</li>
+}
+</ul>
+
+@code {
+    private List<string> modules = new();
+
+    protected override void OnInitialized()
+    {
+        modules = ModuleLoader.DiscoverModules().Select(m => m.GetType().Name).ToList();
+    }
+}

@@ -1,0 +1,34 @@
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Forms
+
+<div class="mb-3">
+    <label class="form-label">@FieldName</label>
+    @if (FieldType == "string[]")
+    {
+        <InputTextArea class="form-control" @bind-Value="StringArrayValue" />
+        <div class="form-text">Enter one value per line</div>
+    }
+    else
+    {
+        <InputText class="form-control" @bind-Value="StringValue" />
+    }
+</div>
+
+@code {
+    [Parameter] public string FieldName { get; set; } = string.Empty;
+    [Parameter] public string? FieldType { get; set; } = "string";
+    [Parameter] public object? Value { get; set; }
+    [Parameter] public EventCallback<object?> ValueChanged { get; set; }
+
+    private string StringValue
+    {
+        get => Value?.ToString() ?? string.Empty;
+        set => ValueChanged.InvokeAsync(value);
+    }
+
+    private string StringArrayValue
+    {
+        get => Value is IEnumerable<string> arr ? string.Join("\n", arr) : (Value?.ToString() ?? string.Empty);
+        set => ValueChanged.InvokeAsync(value.Split('\n', StringSplitOptions.RemoveEmptyEntries));
+    }
+}
