@@ -1,3 +1,7 @@
+using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
 namespace TheBackendCmsSolution.Modules.Abstractions;
 
 public interface ICmsModule
