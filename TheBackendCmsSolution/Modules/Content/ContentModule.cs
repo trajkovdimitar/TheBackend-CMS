@@ -59,6 +59,55 @@ public class ContentModule : ICmsModule
             return await db.ContentTypes.ToListAsync();
         });
 
+        group.MapGet("/content-types/{id:guid}", async (Guid id, ContentDbContext db, ILogger<ContentModule> logger) =>
+        {
+            var ct = await db.ContentTypes.FindAsync(id);
+            if (ct is null)
+            {
+                logger.LogWarning("Content type {Id} not found", id);
+                return Results.NotFound();
+            }
+            return Results.Ok(ct);
+        });
+
+        group.MapPut("/content-types/{id:guid}", async (Guid id, ContentTypeDto dto, ContentDbContext db, ILogger<ContentModule> logger) =>
+        {
+            var validationErrors = ValidateDto(dto, logger);
+            if (validationErrors != null)
+            {
+                return Results.BadRequest(validationErrors);
+            }
+
+            var existing = await db.ContentTypes.FindAsync(id);
+            if (existing is null)
+            {
+                logger.LogWarning("Content type {Id} not found for update", id);
+                return Results.NotFound();
+            }
+
+            existing.Name = dto.Name;
+            existing.DisplayName = dto.DisplayName;
+            existing.Fields = dto.Fields;
+
+            await db.SaveChangesAsync();
+            logger.LogInformation("Updated content type {Id}", id);
+            return Results.Ok(existing);
+        });
+
+        group.MapDelete("/content-types/{id:guid}", async (Guid id, ContentDbContext db, ILogger<ContentModule> logger) =>
+        {
+            var ct = await db.ContentTypes.FindAsync(id);
+            if (ct is null)
+            {
+                logger.LogWarning("Content type {Id} not found for deletion", id);
+                return Results.NotFound();
+            }
+            db.ContentTypes.Remove(ct);
+            await db.SaveChangesAsync();
+            logger.LogInformation("Deleted content type {Id}", id);
+            return Results.NoContent();
+        });
+
         group.MapGet("/content", async (ContentDbContext db, ILogger<ContentModule> logger) =>
         {
             logger.LogInformation("Retrieving all content items");
