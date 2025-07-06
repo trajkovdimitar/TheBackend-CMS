@@ -25,7 +25,7 @@ public class ContentModule : ICmsModule
             var accessor = sp.GetRequiredService<ITenantAccessor>();
             var connectionString = accessor.CurrentTenant?.ConnectionString ??
                                    config.GetConnectionString("contentdb") ??
-                                   "Host=localhost;Port=5433;Database=contentdb;Username=postgres;Password=postgres";
+                                   "Host=localhost;Port=5432;Database=contentdb;Username=postgres;Password=postgres";
             var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
             dataSourceBuilder.EnableDynamicJson();
             options.UseNpgsql(dataSourceBuilder.Build());

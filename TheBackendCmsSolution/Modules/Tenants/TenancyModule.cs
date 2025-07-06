@@ -21,7 +21,7 @@ public class TenancyModule : ICmsModule
         {
             var configuration = sp.GetRequiredService<IConfiguration>();
             var connectionString = configuration.GetConnectionString("tenantsdb") ??
-                                   "Host=localhost;Port=5432;Database=tenantsdb;Username=postgres;Password=postgres";
+                                   "Host=localhost;Port=5433;Database=tenantsdb;Username=postgres;Password=postgres";
             var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
             dataSourceBuilder.EnableDynamicJson();
             options.UseNpgsql(dataSourceBuilder.Build());
