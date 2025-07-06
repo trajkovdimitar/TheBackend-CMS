@@ -1,0 +1,175 @@
+@page "/admin/content-items"
+@rendermode InteractiveServer
+@inject ContentApiClient Api
+
+<h1>Content Items</h1>
+
+@if (items is null || contentTypes is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Content Type</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var item in items)
+        {
+            <tr>
+                <td>@item.Title</td>
+                <td>@item.ContentType.DisplayName</td>
+                <td>
+                    <button class="btn btn-sm btn-secondary me-1" @onclick="() => Edit(item)">Edit</button>
+                    <button class="btn btn-sm btn-danger" @onclick="() => DeleteAsync(item.Id)">Delete</button>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+
+    <hr />
+    <h3>@(editingId is null ? "Create" : "Edit") Content Item</h3>
+    <EditForm Model="model" OnValidSubmit="SaveAsync">
+        <DataAnnotationsValidator />
+        <div class="mb-3">
+            <label class="form-label">Title</label>
+            <InputText class="form-control" @bind-Value="model.Title" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Content Type</label>
+            <select class="form-select" @bind="model.ContentTypeId" @onchange="ContentTypeChanged">
+                <option value="">-- Select --</option>
+                @foreach (var ct in contentTypes)
+                {
+                    <option value="@ct.Id">@ct.DisplayName</option>
+                }
+            </select>
+        </div>
+        @if (currentContentType is not null)
+        {
+            @foreach (var field in currentContentType.Fields)
+            {
+                <DynamicFieldEditor FieldName="@field.Key" FieldType="@field.Value?.ToString()" Value="GetFieldValue(field.Key)" ValueChanged="v => SetFieldValue(field.Key, v)" />
+            }
+        }
+        <button type="submit" class="btn btn-primary">Save</button>
+        @if (editingId is not null)
+        {
+            <button type="button" class="btn btn-link" @onclick="CancelEdit">Cancel</button>
+        }
+    </EditForm>
+}
+
+@code {
+    private List<ContentItemResponse>? items;
+    private List<ContentTypeResponse>? contentTypes;
+    private ContentItemDtoModel model = new();
+    private Guid? editingId;
+    private ContentTypeResponse? currentContentType;
+    private readonly Dictionary<string, object?> fieldValues = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        contentTypes = await Api.GetContentTypesAsync();
+        items = await Api.GetContentItemsAsync();
+    }
+
+    private object? GetFieldValue(string name) => fieldValues.TryGetValue(name, out var v) ? v : null;
+    private Task SetFieldValue(string name, object? value)
+    {
+        fieldValues[name] = value;
+        return Task.CompletedTask;
+    }
+
+    private async Task SaveAsync()
+    {
+        model.Fields = new(fieldValues);
+        if (editingId is null)
+        {
+            await Api.CreateContentItemAsync(model.ToDto());
+        }
+        else
+        {
+            await Api.UpdateContentItemAsync(editingId.Value, model.ToDto());
+        }
+        ResetForm();
+        await LoadAsync();
+    }
+
+    private async Task DeleteAsync(Guid id)
+    {
+        await Api.DeleteContentItemAsync(id);
+        await LoadAsync();
+    }
+
+    private void Edit(ContentItemResponse item)
+    {
+        editingId = item.Id;
+        model = new ContentItemDtoModel { Title = item.Title, ContentTypeId = item.ContentTypeId };
+        currentContentType = contentTypes!.First(ct => ct.Id == item.ContentTypeId);
+        fieldValues.Clear();
+        foreach (var kv in item.Fields)
+        {
+            fieldValues[kv.Key] = ConvertFieldValue(kv.Value);
+        }
+    }
+
+    private void CancelEdit()
+    {
+        ResetForm();
+    }
+
+    private void ResetForm()
+    {
+        editingId = null;
+        model = new ContentItemDtoModel();
+        fieldValues.Clear();
+        currentContentType = null;
+    }
+
+    private void ContentTypeChanged(ChangeEventArgs e)
+    {
+        if (Guid.TryParse(e.Value?.ToString(), out var id))
+        {
+            currentContentType = contentTypes?.FirstOrDefault(ct => ct.Id == id);
+        }
+    }
+
+    private static object? ConvertFieldValue(object? value)
+    {
+        if (value is System.Text.Json.JsonElement el)
+        {
+            if (el.ValueKind == System.Text.Json.JsonValueKind.Array)
+            {
+                return el.EnumerateArray().Select(v => v.GetString() ?? string.Empty).ToArray();
+            }
+            if (el.ValueKind == System.Text.Json.JsonValueKind.String)
+            {
+                return el.GetString();
+            }
+            return el.ToString();
+        }
+        return value;
+    }
+
+    class ContentItemDtoModel
+    {
+        [Required]
+        public string Title { get; set; } = string.Empty;
+        [Required]
+        public Guid ContentTypeId { get; set; }
+        public Dictionary<string, object?> Fields { get; set; } = new();
+        public ContentItemDto ToDto() => new(Title, ContentTypeId, new Dictionary<string, object>(Fields));
+    }
+}
