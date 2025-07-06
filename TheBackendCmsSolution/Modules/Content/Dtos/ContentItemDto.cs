@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace TheBackendCmsSolution.ApiService.Dtos
+namespace TheBackendCmsSolution.Modules.Content.Dtos
 {
     public class ContentItemDto
     {

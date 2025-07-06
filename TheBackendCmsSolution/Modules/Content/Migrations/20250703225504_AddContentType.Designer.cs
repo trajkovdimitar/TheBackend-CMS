@@ -5,15 +5,15 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using TheBackendCmsSolution.ApiService.Data;
+using TheBackendCmsSolution.Modules.Content.Data;
 
 #nullable disable
 
-namespace TheBackendCmsSolution.ApiService.Migrations
+namespace TheBackendCmsSolution.Modules.Content.Migrations
 {
-    [DbContext(typeof(CmsDbContext))]
-    [Migration("20250703221005_InitialCreate")]
-    partial class InitialCreate
+    [DbContext(typeof(ContentDbContext))]
+    [Migration("20250703225504_AddContentType")]
+    partial class AddContentType
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,7 +25,7 @@ namespace TheBackendCmsSolution.ApiService.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("TheBackendCmsSolution.ApiService.Models.ContentItem", b =>
+            modelBuilder.Entity("TheBackendCmsSolution.Modules.Content.Models.ContentItem", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -42,6 +42,10 @@ namespace TheBackendCmsSolution.ApiService.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
