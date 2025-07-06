@@ -29,19 +29,56 @@ public class TenancyModule : ICmsModule
         });
         services.AddScoped<ITenantResolver, TenantResolver>();
         services.AddScoped<ITenantAccessor, TenantAccessor>();
+        services.AddScoped<ITenantStore, TenantStore>();
     }
 
     public void MapRoutes(IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/tenants");
-        group.MapGet("/", async (TenantDbContext db) => await db.Tenants.ToListAsync());
-        group.MapPost("/", async (Tenant tenant, TenantDbContext db, ILogger<TenancyModule> logger) =>
+
+        group.MapGet("/", async (ITenantStore store) => await store.GetAllAsync());
+
+        group.MapGet("/{id:guid}", async (Guid id, ITenantStore store, ILogger<TenancyModule> logger) =>
         {
-            tenant.Id = Guid.NewGuid();
-            db.Tenants.Add(tenant);
-            await db.SaveChangesAsync();
-            logger.LogInformation("Created tenant {Id}", tenant.Id);
-            return Results.Created($"/tenants/{tenant.Id}", tenant);
+            var tenant = await store.GetAsync(id);
+            if (tenant is null)
+            {
+                logger.LogWarning("Tenant {Id} not found", id);
+                return Results.NotFound();
+            }
+            return Results.Ok(tenant);
+        });
+
+        group.MapPost("/", async (Tenant tenant, ITenantStore store, ILogger<TenancyModule> logger) =>
+        {
+            var created = await store.CreateAsync(tenant);
+            logger.LogInformation("Created tenant {Id}", created.Id);
+            return Results.Created($"/tenants/{created.Id}", created);
+        });
+
+        group.MapPut("/{id:guid}", async (Guid id, Tenant tenant, ITenantStore store, ILogger<TenancyModule> logger) =>
+        {
+            var updated = await store.UpdateAsync(id, tenant);
+            if (!updated)
+            {
+                logger.LogWarning("Tenant {Id} not found for update", id);
+                return Results.NotFound();
+            }
+            logger.LogInformation("Updated tenant {Id}", id);
+            tenant.Id = id;
+            return Results.Ok(tenant);
+        });
+
+        group.MapDelete("/{id:guid}", async (Guid id, ITenantStore store, ILogger<TenancyModule> logger) =>
+        {
+            var removed = await store.DeleteAsync(id);
+            if (!removed)
+            {
+                logger.LogWarning("Tenant {Id} not found for deletion", id);
+                return Results.NotFound();
+            }
+            logger.LogInformation("Deleted tenant {Id}", id);
+            return Results.NoContent();
         });
     }
 
