@@ -141,6 +141,29 @@ Response (204 No Content): If successful.
 Error (404 Not Found): If the ID doesn’t exist.
 Example:curl -X DELETE http://localhost:7309/content/123e4567-e89b-12d3-a456-426614174000
 
+Content Types
+POST /content-types
+Creates a new content type.
+
+Request:
+{
+  "Name": "blogpost",
+  "DisplayName": "Blog Post",
+  "Fields": {
+    "Body": "string",
+    "Tags": "string[]"
+  }
+}
+
+GET /content-types
+Retrieves all content types.
+
+GET /content-types/{id}
+Retrieves a content type by ID.
+
+PUT /content-types/{id}
+Updates an existing content type.
+
 
 
 Notes

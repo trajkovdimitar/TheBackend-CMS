@@ -1,0 +1,148 @@
+@page "/admin/content-types"
+@rendermode InteractiveServer
+@inject ContentApiClient Api
+
+<h1>Content Types</h1>
+
+@if (contentTypes is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Display Name</th>
+                <th>Fields</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var ct in contentTypes)
+        {
+            <tr>
+                <td>@ct.Name</td>
+                <td>@ct.DisplayName</td>
+                <td>@string.Join(", ", ct.Fields.Keys)</td>
+                <td><button class="btn btn-sm btn-secondary" @onclick="() => Edit(ct)">Edit</button></td>
+            </tr>
+        }
+        </tbody>
+    </table>
+
+    <hr />
+
+    <h3>@(editingId is null ? "Create" : "Edit") Content Type</h3>
+    <EditForm Model="dto" OnValidSubmit="SaveAsync">
+        <DataAnnotationsValidator />
+        <div class="mb-3">
+            <label class="form-label">Name</label>
+            <InputText class="form-control" @bind-Value="dto.Name" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Display Name</label>
+            <InputText class="form-control" @bind-Value="dto.DisplayName" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Fields</label>
+            @foreach (var field in fields)
+            {
+                <div class="input-group mb-1">
+                    <InputText class="form-control" placeholder="Field name" @bind-Value="field.Name" />
+                    <InputText class="form-control" placeholder="Type" @bind-Value="field.Type" />
+                    <button type="button" class="btn btn-danger" @onclick="() => RemoveField(field)">X</button>
+                </div>
+            }
+            <button type="button" class="btn btn-secondary" @onclick="AddField">Add Field</button>
+        </div>
+        <button type="submit" class="btn btn-primary">Save</button>
+        @if (editingId is not null)
+        {
+            <button type="button" class="btn btn-link" @onclick="CancelEdit">Cancel</button>
+        }
+    </EditForm>
+}
+
+@code {
+    private List<ContentTypeResponse>? contentTypes;
+    private ContentTypeDtoModel dto = new();
+    private readonly List<FieldModel> fields = [];
+    private Guid? editingId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        contentTypes = await Api.GetContentTypesAsync();
+    }
+
+    private void AddField()
+    {
+        fields.Add(new FieldModel());
+    }
+
+    private void RemoveField(FieldModel field)
+    {
+        fields.Remove(field);
+    }
+
+    private async Task SaveAsync()
+    {
+        dto.Fields = fields.ToDictionary(f => f.Name, f => (object)f.Type);
+        if (editingId is null)
+        {
+            await Api.CreateContentTypeAsync(dto.ToDto());
+        }
+        else
+        {
+            await Api.UpdateContentTypeAsync(editingId.Value, dto.ToDto());
+        }
+        ResetForm();
+        await LoadAsync();
+    }
+
+    private void Edit(ContentTypeResponse ct)
+    {
+        editingId = ct.Id;
+        dto = new ContentTypeDtoModel { Name = ct.Name, DisplayName = ct.DisplayName };
+        fields.Clear();
+        foreach (var kv in ct.Fields)
+        {
+            fields.Add(new FieldModel { Name = kv.Key, Type = kv.Value?.ToString() ?? "" });
+        }
+    }
+
+    private void CancelEdit()
+    {
+        ResetForm();
+    }
+
+    private void ResetForm()
+    {
+        editingId = null;
+        dto = new ContentTypeDtoModel();
+        fields.Clear();
+    }
+
+    class FieldModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
+    }
+
+    class ContentTypeDtoModel
+    {
+        [Required]
+        public string Name { get; set; } = string.Empty;
+        [Required]
+        public string DisplayName { get; set; } = string.Empty;
+        public Dictionary<string, object> Fields { get; set; } = new();
+
+        public ContentTypeDto ToDto() => new(Name, DisplayName, Fields);
+    }
+}
