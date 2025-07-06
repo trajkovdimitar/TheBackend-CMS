@@ -138,12 +138,9 @@ else
         currentContentType = null;
     }
 
-    private void ContentTypeChanged(ChangeEventArgs e)
+    private void ContentTypeChanged()
     {
-        if (Guid.TryParse(e.Value?.ToString(), out var id))
-        {
-            currentContentType = contentTypes?.FirstOrDefault(ct => ct.Id == id);
-        }
+        currentContentType = contentTypes?.FirstOrDefault(ct => ct.Id == model.ContentTypeId);
     }
 
     private static object? ConvertFieldValue(object? value)
