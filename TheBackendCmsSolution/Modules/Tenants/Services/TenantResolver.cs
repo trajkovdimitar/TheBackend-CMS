@@ -20,6 +20,6 @@ public class TenantResolver : ITenantResolver
         var path = context.Request.Path.Value ?? string.Empty;
         return await _db.Tenants.AsNoTracking()
             .FirstOrDefaultAsync(t => t.Host == host ||
-                                    (t.UrlPrefix != null && path.StartsWith($"/{t.UrlPrefix}", StringComparison.OrdinalIgnoreCase)));
+                                    (t.UrlPrefix != null && path.StartsWith("/" + t.UrlPrefix!, StringComparison.OrdinalIgnoreCase)));
     }
 }
