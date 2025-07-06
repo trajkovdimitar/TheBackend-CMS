@@ -43,7 +43,7 @@ else
         </div>
         <div class="mb-3">
             <label class="form-label">Content Type</label>
-            <select class="form-select" @bind="model.ContentTypeId" @onchange="ContentTypeChanged">
+            <select class="form-select" @bind="model.ContentTypeId" @bind:after="ContentTypeChanged">
                 <option value="">-- Select --</option>
                 @foreach (var ct in contentTypes)
                 {
