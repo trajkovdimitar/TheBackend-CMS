@@ -49,5 +49,19 @@ public class TenancyModule : ICmsModule
         using var scope = services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<TenantDbContext>();
         db.Database.Migrate();
+
+        if (!db.Tenants.Any())
+        {
+            var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+            var defaultConn = configuration.GetConnectionString("contentdb") ??
+                              "Host=localhost;Port=5432;Database=contentdb;Username=postgres;Password=postgres";
+            db.Tenants.Add(new Tenant
+            {
+                Id = Guid.NewGuid(),
+                Name = "Default",
+                ConnectionString = defaultConn
+            });
+            db.SaveChanges();
+        }
     }
 }
