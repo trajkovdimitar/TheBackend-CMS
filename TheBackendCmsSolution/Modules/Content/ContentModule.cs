@@ -12,6 +12,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
+using TheBackendCmsSolution.Modules.Tenants.Services;
 
 namespace TheBackendCmsSolution.Modules.Content;
 
@@ -19,11 +20,16 @@ public class ContentModule : ICmsModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration config)
     {
-        var connectionString = config.GetConnectionString("contentdb") ??
-                               "Host=localhost;Port=5433;Database=contentdb;Username=postgres;Password=postgres";
-        var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
-        dataSourceBuilder.EnableDynamicJson();
-        services.AddDbContext<ContentDbContext>(options => options.UseNpgsql(dataSourceBuilder.Build()));
+        services.AddDbContext<ContentDbContext>((sp, options) =>
+        {
+            var accessor = sp.GetRequiredService<ITenantAccessor>();
+            var connectionString = accessor.CurrentTenant?.ConnectionString ??
+                                   config.GetConnectionString("contentdb") ??
+                                   "Host=localhost;Port=5433;Database=contentdb;Username=postgres;Password=postgres";
+            var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+            dataSourceBuilder.EnableDynamicJson();
+            options.UseNpgsql(dataSourceBuilder.Build());
+        });
     }
 
     public void MapRoutes(IEndpointRouteBuilder endpoints)
