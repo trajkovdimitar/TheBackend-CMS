@@ -97,6 +97,7 @@ public class TenancyModule : ICmsModule
             {
                 Id = Guid.NewGuid(),
                 Name = "Default",
+                Host = "localhost",
                 ConnectionString = defaultConn,
                 EnabledModules = ModuleLoader.DiscoverModules()
                     .Select(m => m.GetType().FullName!)
