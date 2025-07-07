@@ -18,6 +18,8 @@ public class IdentityServerModule : ICmsModule
     {
         services.AddHttpContextAccessor();
 
+        services.AddSingleton<Duende.IdentityServer.Services.IServerUrls, BasicServerUrls>();
+
         services.AddDbContext<ApplicationIdentityDbContext>((sp, options) =>
         {
             var connString = configuration.GetConnectionString("identitydb") ??
@@ -47,7 +49,6 @@ public class IdentityServerModule : ICmsModule
             ])
             .AddDeveloperSigningCredential();
 
-        services.AddScoped<Duende.IdentityServer.Services.IServerUrls, BasicServerUrls>();
     }
 
     public void MapRoutes(IEndpointRouteBuilder endpoints)

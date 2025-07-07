@@ -8,6 +8,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod());
+});
+
 var modules = ModuleLoader.DiscoverModules().ToList();
 
 var baseServices = new ServiceCollection();
@@ -35,6 +43,7 @@ var providerFactory = app.Services.GetRequiredService<TenantServiceProviderFacto
 providerFactory.InitializeAsync().GetAwaiter().GetResult();
 
 app.UseMiddleware<TheBackendCmsSolution.Modules.Tenants.TenantResolutionMiddleware>();
+app.UseCors();
 
 foreach (var module in modules)
 {
