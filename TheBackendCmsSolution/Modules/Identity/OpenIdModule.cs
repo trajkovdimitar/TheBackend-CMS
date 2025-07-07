@@ -109,5 +109,16 @@ public class OpenIdModule : ICmsModule
             userManager.CreateAsync(user, viewerPassword).GetAwaiter().GetResult();
             userManager.AddToRoleAsync(user, viewerRole).GetAwaiter().GetResult();
         }
+
+        var scopeManager = scope.ServiceProvider.GetRequiredService<IOpenIddictScopeManager>();
+        if (scopeManager.FindByNameAsync("cms.api").GetAwaiter().GetResult() is null)
+        {
+            var descriptor = new OpenIddictScopeDescriptor
+            {
+                Name = "cms.api",
+                DisplayName = "CMS API"
+            };
+            scopeManager.CreateAsync(descriptor).GetAwaiter().GetResult();
+        }
     }
 }
