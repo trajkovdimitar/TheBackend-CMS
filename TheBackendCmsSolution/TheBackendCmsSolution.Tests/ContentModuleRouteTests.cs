@@ -1,7 +1,10 @@
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Hosting;
 using TheBackendCmsSolution.Modules.Content;
 using TheBackendCmsSolution.Modules.Content.Data;
 using TheBackendCmsSolution.Modules.Content.Dtos;
@@ -14,7 +17,8 @@ public class ContentModuleRouteTests
 {
     private static HttpClient CreateClient()
     {
-        var builder = WebApplication.CreateSlimBuilder();
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
         builder.Services.AddDbContext<ContentDbContext>(o => o.UseInMemoryDatabase("content"));
         builder.Services.AddSingleton<ITenantAccessor>(new TenantAccessor
         {
@@ -31,7 +35,11 @@ public class ContentModuleRouteTests
     public async Task CreateAndRetrieveContentType()
     {
         using var client = CreateClient();
-        var dto = new ContentTypeDto("article", "Article", new());
+        var dto = new ContentTypeDto
+        {
+            Name = "article",
+            DisplayName = "Article"
+        };
         var create = await client.PostAsJsonAsync("/content-types", dto);
         create.EnsureSuccessStatusCode();
         var created = await create.Content.ReadFromJsonAsync<ContentType>();

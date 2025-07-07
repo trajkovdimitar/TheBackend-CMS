@@ -2,12 +2,12 @@ using Bunit;
 using Xunit;
 using TheBackendCmsSolution.Web.Components.FieldEditors;
 
-public class DynamicFieldEditorTests : TestContext
+public class DynamicFieldEditorTests : BunitContext
 {
     [Fact]
     public void RendersInput_ForString()
     {
-        var component = RenderComponent<DynamicFieldEditor>(parameters => parameters
+        var component = Render<DynamicFieldEditor>(parameters => parameters
             .Add(p => p.FieldName, "Title")
             .Add(p => p.FieldType, "string")
             .Add(p => p.Value, "Hello"));
@@ -18,7 +18,7 @@ public class DynamicFieldEditorTests : TestContext
     [Fact]
     public void RendersTextArea_ForStringArray()
     {
-        var component = RenderComponent<DynamicFieldEditor>(parameters => parameters
+        var component = Render<DynamicFieldEditor>(parameters => parameters
             .Add(p => p.FieldName, "Tags")
             .Add(p => p.FieldType, "string[]")
             .Add(p => p.Value, new[] { "a", "b" }));

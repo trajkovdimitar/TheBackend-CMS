@@ -15,12 +15,21 @@ namespace TheBackendCmsSolution.Modules.Content.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<ContentType>()
-                .Property(c => c.Fields)
-                .HasColumnType("jsonb");
-            modelBuilder.Entity<ContentItem>()
-                .Property(c => c.Fields)
-                .HasColumnType("jsonb");
+            if (Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
+            {
+                modelBuilder.Entity<ContentType>().Ignore(c => c.Fields);
+                modelBuilder.Entity<ContentItem>().Ignore(c => c.Fields);
+            }
+            else
+            {
+                modelBuilder.Entity<ContentType>()
+                    .Property(c => c.Fields)
+                    .HasColumnType("jsonb");
+                modelBuilder.Entity<ContentItem>()
+                    .Property(c => c.Fields)
+                    .HasColumnType("jsonb");
+            }
+
             modelBuilder.Entity<ContentItem>()
                 .HasOne(c => c.ContentType)
                 .WithMany()
