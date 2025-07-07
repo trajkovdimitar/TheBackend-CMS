@@ -64,7 +64,6 @@ public class TenantResolutionMiddleware
 ```
 
 ## Next Steps
-- Implement `ITenantResolver` and a tenant store for managing tenant records.
 - Add endpoints to create and manage tenants.
 - Update modules to read connection strings from the resolved tenant.
 - Write integration tests for tenant isolation.

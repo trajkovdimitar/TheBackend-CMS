@@ -37,6 +37,7 @@ public class TenantStore : ITenantStore
         existing.Host = tenant.Host;
         existing.UrlPrefix = tenant.UrlPrefix;
         existing.ConnectionString = tenant.ConnectionString;
+        existing.EnabledModules = tenant.EnabledModules;
 
         await _db.SaveChangesAsync();
         return true;
