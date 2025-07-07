@@ -174,3 +174,7 @@ Notes
 The API uses PostgreSQL, orchestrated by .NET Aspire.
 Telemetry (request counts, latency) is available in the Aspire dashboard (http://localhost:18888).
 Responses include a simplified ContentType object to avoid circular references.
+
+## License
+This project is licensed under the [MIT License](../../LICENSE).
+
