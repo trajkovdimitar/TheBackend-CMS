@@ -27,7 +27,7 @@ foreach (var sd in builder.Services)
 builder.Services.AddSingleton<TenantServiceProviderFactory>(sp =>
     new TenantServiceProviderFactory(baseServices, builder.Configuration, modules, sp));
 
-foreach (var module in modules.Where(m => m is TenancyModule || m is TheBackendCmsSolution.Modules.Identity.IdentityServerModule))
+foreach (var module in modules.Where(m => m is TenancyModule || m is TheBackendCmsSolution.Modules.Identity.OpenIdModule))
 {
     module.ConfigureServices(builder.Services, builder.Configuration);
 }
@@ -36,7 +36,7 @@ var app = builder.Build();
 
 // Apply host-level migrations for the tenants store
 modules.OfType<TenancyModule>().FirstOrDefault()?.ApplyMigrations(app.Services);
-modules.OfType<TheBackendCmsSolution.Modules.Identity.IdentityServerModule>().FirstOrDefault()?.ApplyMigrations(app.Services);
+modules.OfType<TheBackendCmsSolution.Modules.Identity.OpenIdModule>().FirstOrDefault()?.ApplyMigrations(app.Services);
 
 // Build per-tenant service providers
 var providerFactory = app.Services.GetRequiredService<TenantServiceProviderFactory>();

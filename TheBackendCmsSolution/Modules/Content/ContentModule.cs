@@ -28,6 +28,7 @@ public class ContentModule : ICmsModule
                                    "Host=localhost;Port=5432;Database=contentdb;Username=postgres;Password=postgres";
             var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
             dataSourceBuilder.EnableDynamicJson();
+            dataSourceBuilder.ConnectionStringBuilder.MaxPoolSize = 20;
             options.UseNpgsql(dataSourceBuilder.Build());
         });
     }
