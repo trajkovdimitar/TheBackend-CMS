@@ -16,6 +16,8 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod());
 });
 
+builder.Services.AddAuthorization();
+
 var modules = ModuleLoader.DiscoverModules().ToList();
 
 var baseServices = new ServiceCollection();

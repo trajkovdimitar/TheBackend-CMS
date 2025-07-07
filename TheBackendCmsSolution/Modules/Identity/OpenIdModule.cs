@@ -62,5 +62,25 @@ public class OpenIdModule : ICmsModule
         using var scope = services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationIdentityDbContext>();
         db.Database.Migrate();
+
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+        const string adminRole = "Administrator";
+        const string adminUser = "admin";
+        const string adminEmail = "admin@example.com";
+        const string adminPassword = "Admin123!";
+
+        if (!roleManager.Roles.Any(r => r.Name == adminRole))
+        {
+            roleManager.CreateAsync(new IdentityRole(adminRole)).GetAwaiter().GetResult();
+        }
+
+        if (userManager.FindByNameAsync(adminUser).GetAwaiter().GetResult() is null)
+        {
+            var user = new IdentityUser(adminUser) { Email = adminEmail, EmailConfirmed = true };
+            userManager.CreateAsync(user, adminPassword).GetAwaiter().GetResult();
+            userManager.AddToRoleAsync(user, adminRole).GetAwaiter().GetResult();
+        }
     }
 }

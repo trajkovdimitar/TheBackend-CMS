@@ -4,6 +4,17 @@ namespace TheBackendCmsSolution.Web;
 
 public class ContentApiClient(HttpClient httpClient)
 {
+    public void SetBearerToken(string? token)
+    {
+        if (string.IsNullOrEmpty(token))
+        {
+            httpClient.DefaultRequestHeaders.Authorization = null;
+        }
+        else
+        {
+            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        }
+    }
     public async Task<List<ContentTypeResponse>> GetContentTypesAsync(CancellationToken cancellationToken = default)
     {
         try
