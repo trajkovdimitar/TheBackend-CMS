@@ -10,13 +10,12 @@ namespace TheBackendCmsSolution.Web;
 public class AuthService
 {
     private readonly HttpClient _http;
-    private readonly JwtAuthenticationStateProvider _stateProvider;
     public string? AccessToken { get; private set; }
+    public event Action? AuthenticationStateChanged;
 
-    public AuthService(HttpClient http, JwtAuthenticationStateProvider stateProvider)
+    public AuthService(HttpClient http)
     {
         _http = http;
-        _stateProvider = stateProvider;
     }
 
     public async Task<bool> LoginAsync(string username, string password)
@@ -33,7 +32,7 @@ public class AuthService
         var json = await response.Content.ReadFromJsonAsync<JsonElement>();
         AccessToken = json.GetProperty("access_token").GetString();
         _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AccessToken);
-        _stateProvider.NotifyAuthenticationStateChanged();
+        AuthenticationStateChanged?.Invoke();
         return true;
     }
 
@@ -41,7 +40,7 @@ public class AuthService
     {
         AccessToken = null;
         _http.DefaultRequestHeaders.Authorization = null;
-        _stateProvider.NotifyAuthenticationStateChanged();
+        AuthenticationStateChanged?.Invoke();
         return Task.CompletedTask;
     }
 

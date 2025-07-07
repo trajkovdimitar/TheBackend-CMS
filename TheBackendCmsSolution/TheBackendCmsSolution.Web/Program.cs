@@ -21,8 +21,7 @@ var apiBase = builder.Configuration["ApiBaseAddress"] ?? "https://localhost:7309
 builder.Services.AddHttpClient("api", client =>
     client.BaseAddress = new(apiBase));
 builder.Services.AddScoped<AuthService>(sp =>
-    new AuthService(sp.GetRequiredService<IHttpClientFactory>().CreateClient("api"),
-        sp.GetRequiredService<JwtAuthenticationStateProvider>()));
+    new AuthService(sp.GetRequiredService<IHttpClientFactory>().CreateClient("api")));
 builder.Services.AddScoped<ContentApiClient>(sp =>
 {
     var client = sp.GetRequiredService<IHttpClientFactory>().CreateClient("api");

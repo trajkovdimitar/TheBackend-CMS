@@ -71,9 +71,22 @@ public class OpenIdModule : ICmsModule
         const string adminEmail = "admin@example.com";
         const string adminPassword = "Admin123!";
 
-        if (!roleManager.Roles.Any(r => r.Name == adminRole))
+        const string editorRole = "Editor";
+        const string editorUser = "editor";
+        const string editorEmail = "editor@example.com";
+        const string editorPassword = "Editor123!";
+
+        const string viewerRole = "Viewer";
+        const string viewerUser = "viewer";
+        const string viewerEmail = "viewer@example.com";
+        const string viewerPassword = "Viewer123!";
+
+        foreach (var role in new[] { adminRole, editorRole, viewerRole })
         {
-            roleManager.CreateAsync(new IdentityRole(adminRole)).GetAwaiter().GetResult();
+            if (!roleManager.Roles.Any(r => r.Name == role))
+            {
+                roleManager.CreateAsync(new IdentityRole(role)).GetAwaiter().GetResult();
+            }
         }
 
         if (userManager.FindByNameAsync(adminUser).GetAwaiter().GetResult() is null)
@@ -81,6 +94,20 @@ public class OpenIdModule : ICmsModule
             var user = new IdentityUser(adminUser) { Email = adminEmail, EmailConfirmed = true };
             userManager.CreateAsync(user, adminPassword).GetAwaiter().GetResult();
             userManager.AddToRoleAsync(user, adminRole).GetAwaiter().GetResult();
+        }
+
+        if (userManager.FindByNameAsync(editorUser).GetAwaiter().GetResult() is null)
+        {
+            var user = new IdentityUser(editorUser) { Email = editorEmail, EmailConfirmed = true };
+            userManager.CreateAsync(user, editorPassword).GetAwaiter().GetResult();
+            userManager.AddToRoleAsync(user, editorRole).GetAwaiter().GetResult();
+        }
+
+        if (userManager.FindByNameAsync(viewerUser).GetAwaiter().GetResult() is null)
+        {
+            var user = new IdentityUser(viewerUser) { Email = viewerEmail, EmailConfirmed = true };
+            userManager.CreateAsync(user, viewerPassword).GetAwaiter().GetResult();
+            userManager.AddToRoleAsync(user, viewerRole).GetAwaiter().GetResult();
         }
     }
 }
