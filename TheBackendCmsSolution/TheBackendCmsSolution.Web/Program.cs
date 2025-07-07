@@ -17,8 +17,9 @@ builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<JwtAuthenticationStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<JwtAuthenticationStateProvider>());
 builder.Services.AddCascadingAuthenticationState();
+var apiBase = builder.Configuration["ApiBaseAddress"] ?? "https://localhost:7309";
 builder.Services.AddHttpClient("api", client =>
-    client.BaseAddress = new("https+http://apiservice"));
+    client.BaseAddress = new(apiBase));
 builder.Services.AddScoped<AuthService>(sp =>
     new AuthService(sp.GetRequiredService<IHttpClientFactory>().CreateClient("api"),
         sp.GetRequiredService<JwtAuthenticationStateProvider>()));

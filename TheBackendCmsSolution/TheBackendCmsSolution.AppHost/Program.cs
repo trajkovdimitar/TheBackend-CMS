@@ -15,7 +15,9 @@ var apiService = builder.AddProject<Projects.TheBackendCmsSolution_ApiService>("
                        .WithReference(contentDb)
                        .WithReference(tenantsDb)
                        .WithReference(identityDb);
+
 builder.AddProject<Projects.TheBackendCmsSolution_Web>("webfrontend")
-       .WithReference(apiService);
+       .WithReference(apiService)
+       .WithEnvironment("ApiBaseAddress", apiService.GetEndpoint("https"));
 
 builder.Build().Run();
