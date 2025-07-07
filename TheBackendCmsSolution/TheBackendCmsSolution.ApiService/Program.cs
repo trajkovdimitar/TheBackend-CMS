@@ -2,6 +2,7 @@ using TheBackendCmsSolution.Modules.Abstractions;
 using TheBackendCmsSolution.Modules.Tenants;
 using TheBackendCmsSolution.Modules.Tenants.Services;
 using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,10 +10,16 @@ builder.AddServiceDefaults();
 
 var modules = ModuleLoader.DiscoverModules().ToList();
 
-builder.Services.AddSingleton<TenantServiceProviderFactory>(sp =>
-    new TenantServiceProviderFactory(builder.Services, builder.Configuration, modules, sp));
+var baseServices = new ServiceCollection();
+foreach (var sd in builder.Services)
+{
+    ((IServiceCollection)baseServices).Add(sd);
+}
 
-foreach (var module in modules)
+builder.Services.AddSingleton<TenantServiceProviderFactory>(sp =>
+    new TenantServiceProviderFactory(baseServices, builder.Configuration, modules, sp));
+
+foreach (var module in modules.Where(m => m is TenancyModule || m is TheBackendCmsSolution.Modules.Identity.IdentityServerModule))
 {
     module.ConfigureServices(builder.Services, builder.Configuration);
 }

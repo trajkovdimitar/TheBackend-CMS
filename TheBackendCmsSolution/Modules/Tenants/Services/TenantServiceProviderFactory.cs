@@ -58,7 +58,9 @@ public class TenantServiceProviderFactory
         services.AddScoped<ITenantAccessor>(_ => new TenantAccessor { CurrentTenant = tenant });
 
         var enabled = tenant.EnabledModules ?? new List<string>();
-        var selectedModules = _modules.Where(m => enabled.Contains(m.GetType().FullName));
+        var selectedModules = _modules
+            .Where(m => enabled.Contains(m.GetType().FullName))
+            .Where(m => m.GetType().FullName != "TheBackendCmsSolution.Modules.Identity.IdentityServerModule" && m is not TenancyModule);
         foreach (var module in selectedModules)
         {
             module.ConfigureServices(services, _configuration);
