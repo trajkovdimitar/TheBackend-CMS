@@ -25,7 +25,8 @@ dotnet restore
 ## Building and Running
 
 Ensure Docker Desktop is running, then start the AppHost which launches the
-Aspire dashboard, ApiService, Web frontend and the PostgreSQL databases:
+Aspire dashboard, ApiService, Web frontend and the PostgreSQL databases for
+content, tenants, taxonomy and users:
 
 ```bash
 dotnet run --project TheBackendCmsSolution.AppHost
