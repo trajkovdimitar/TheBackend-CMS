@@ -35,3 +35,5 @@ foreach (var module in modules)
 
 app.MapDefaultEndpoints();
 app.Run();
+
+public partial class Program { }
