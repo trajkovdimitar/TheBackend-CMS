@@ -5,7 +5,10 @@ using Microsoft.Extensions.DependencyInjection;
 using TheBackendCmsSolution.Modules.Abstractions;
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer;
-using Duende.IdentityServer.Test;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using TheBackendCmsSolution.Modules.Identity.Data;
 
 namespace TheBackendCmsSolution.Modules.Identity;
 
@@ -13,7 +16,21 @@ public class IdentityServerModule : ICmsModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
+        services.AddDbContext<ApplicationIdentityDbContext>((sp, options) =>
+        {
+            var connString = configuration.GetConnectionString("identitydb") ??
+                               "Host=localhost;Port=5434;Database=identitydb;Username=postgres;Password=postgres";
+            var dsBuilder = new NpgsqlDataSourceBuilder(connString);
+            dsBuilder.EnableDynamicJson();
+            options.UseNpgsql(dsBuilder.Build());
+        });
+
+        services.AddIdentity<IdentityUser, IdentityRole>()
+            .AddEntityFrameworkStores<ApplicationIdentityDbContext>()
+            .AddDefaultTokenProviders();
+
         services.AddIdentityServer()
+            .AddAspNetIdentity<IdentityUser>()
             .AddInMemoryApiScopes([
                 new ApiScope("cms.api", "CMS API")
             ])
@@ -24,14 +41,6 @@ public class IdentityServerModule : ICmsModule
                     AllowedGrantTypes = GrantTypes.ClientCredentials,
                     ClientSecrets = { new Secret("secret".Sha256()) },
                     AllowedScopes = { "cms.api" }
-                }
-            ])
-            .AddTestUsers([
-                new TestUser
-                {
-                    SubjectId = "1",
-                    Username = "admin",
-                    Password = "password"
                 }
             ])
             .AddDeveloperSigningCredential();
@@ -47,6 +56,8 @@ public class IdentityServerModule : ICmsModule
 
     public void ApplyMigrations(IServiceProvider services)
     {
-        // no-op
+        using var scope = services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationIdentityDbContext>();
+        db.Database.Migrate();
     }
 }

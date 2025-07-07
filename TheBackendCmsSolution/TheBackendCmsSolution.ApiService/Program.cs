@@ -21,6 +21,7 @@ var app = builder.Build();
 
 // Apply host-level migrations for the tenants store
 modules.OfType<TenancyModule>().FirstOrDefault()?.ApplyMigrations(app.Services);
+modules.OfType<TheBackendCmsSolution.Modules.Identity.IdentityServerModule>().FirstOrDefault()?.ApplyMigrations(app.Services);
 
 // Build per-tenant service providers
 var providerFactory = app.Services.GetRequiredService<TenantServiceProviderFactory>();
