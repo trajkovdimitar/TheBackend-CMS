@@ -20,6 +20,11 @@ builder.Services.AddAuthorization();
 
 var modules = ModuleLoader.DiscoverModules().ToList();
 
+foreach (var module in modules.Where(m => m is TenancyModule || m is TheBackendCmsSolution.Modules.Identity.OpenIdModule))
+{
+    module.ConfigureServices(builder.Services, builder.Configuration);
+}
+
 var baseServices = new ServiceCollection();
 foreach (var sd in builder.Services)
 {
@@ -28,11 +33,6 @@ foreach (var sd in builder.Services)
 
 builder.Services.AddSingleton<TenantServiceProviderFactory>(sp =>
     new TenantServiceProviderFactory(baseServices, builder.Configuration, modules, sp));
-
-foreach (var module in modules.Where(m => m is TenancyModule || m is TheBackendCmsSolution.Modules.Identity.OpenIdModule))
-{
-    module.ConfigureServices(builder.Services, builder.Configuration);
-}
 
 var app = builder.Build();
 

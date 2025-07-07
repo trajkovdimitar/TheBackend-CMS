@@ -8,21 +8,25 @@
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="admin/content-types">
-                <span class="bi bi-collection" aria-hidden="true"></span> Content Types
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="admin/content-items">
-                <span class="bi bi-card-text" aria-hidden="true"></span> Content Items
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="admin/modules">
-                <span class="bi bi-puzzle" aria-hidden="true"></span> Modules
-            </NavLink>
-        </div>
+        <AuthorizeView Roles="Administrator">
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="admin/content-types">
+                        <span class="bi bi-collection" aria-hidden="true"></span> Content Types
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="admin/content-items">
+                        <span class="bi bi-card-text" aria-hidden="true"></span> Content Items
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="admin/modules">
+                        <span class="bi bi-puzzle" aria-hidden="true"></span> Modules
+                    </NavLink>
+                </div>
+            </Authorized>
+        </AuthorizeView>
         <AuthorizeView>
             <Authorized>
                 <div class="nav-item px-3">
