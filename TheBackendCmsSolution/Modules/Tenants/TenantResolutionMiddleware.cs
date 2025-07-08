@@ -21,15 +21,19 @@ public class TenantResolutionMiddleware
         var tenant = await resolver.ResolveAsync(context);
         accessor.CurrentTenant = tenant;
         context.Items["Tenant"] = tenant;
-        if (tenant != null && providerFactory.TryGetProvider(tenant.Name, out var provider))
+
+        var path = context.Request.Path.Value ?? string.Empty;
+        IServiceProvider? provider = null;
+        var useTenantProvider = tenant != null &&
+                               !path.StartsWith("/connect", StringComparison.OrdinalIgnoreCase) &&
+                               providerFactory.TryGetProvider(tenant.Name, out provider);
+
+        if (useTenantProvider)
         {
-            using var scope = provider.CreateScope();
+            using var scope = provider!.CreateScope();
             context.RequestServices = scope.ServiceProvider;
-            await _next(context);
         }
-        else
-        {
-            await _next(context);
-        }
+
+        await _next(context);
     }
 }
