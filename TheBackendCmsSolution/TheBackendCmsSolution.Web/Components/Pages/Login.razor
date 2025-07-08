@@ -26,7 +26,7 @@
 
     private async Task HandleLogin()
     {
-        var client = ClientFactory.CreateClient();
+        var client = ClientFactory.CreateClient("auth");
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["username"] = model.UserName,
