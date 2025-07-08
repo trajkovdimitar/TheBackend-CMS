@@ -61,7 +61,9 @@ public class TenantServiceProviderFactory
         var enabled = tenant.EnabledModules ?? new List<string>();
         var selectedModules = _modules
             .Where(m => enabled.Contains(m.GetType().FullName))
-            .Where(m => m is not TenancyModule && m is not TheBackendCmsSolution.Modules.Identity.OpenIdModule);
+            .Where(m => m is not TenancyModule &&
+                        m is not TheBackendCmsSolution.Modules.Identity.OpenIdModule &&
+                        m.GetType().Name != "IdentityServerModule");
         foreach (var module in selectedModules)
         {
             module.ConfigureServices(services, _configuration);
