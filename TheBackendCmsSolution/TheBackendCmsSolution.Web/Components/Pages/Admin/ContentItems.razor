@@ -1,4 +1,5 @@
 @page "/admin/content-items"
+@attribute [Authorize(Roles = "Administrator")]
 @rendermode InteractiveServer
 @inject ContentApiClient Api
 

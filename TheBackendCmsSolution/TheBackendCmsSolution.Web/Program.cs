@@ -1,5 +1,6 @@
 using TheBackendCmsSolution.Web;
 using TheBackendCmsSolution.Web.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,10 +13,20 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddOutputCache();
 
-builder.Services.AddHttpClient<ContentApiClient>(client =>
-    {
-        client.BaseAddress = new("https+http://apiservice");
-    });
+builder.Services.AddAuthorizationCore();
+builder.Services.AddScoped<JwtAuthenticationStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<JwtAuthenticationStateProvider>());
+builder.Services.AddCascadingAuthenticationState();
+var apiBase = builder.Configuration["ApiBaseAddress"] ?? "https://localhost:7309";
+builder.Services.AddHttpClient("api", client =>
+    client.BaseAddress = new(apiBase));
+builder.Services.AddScoped<AuthService>(sp =>
+    new AuthService(sp.GetRequiredService<IHttpClientFactory>().CreateClient("api")));
+builder.Services.AddScoped<ContentApiClient>(sp =>
+{
+    var client = sp.GetRequiredService<IHttpClientFactory>().CreateClient("api");
+    return new ContentApiClient(client);
+});
 
 var app = builder.Build();
 

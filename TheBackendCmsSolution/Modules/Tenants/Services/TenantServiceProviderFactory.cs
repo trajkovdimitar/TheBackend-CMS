@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using TheBackendCmsSolution.Modules.Abstractions;
 using TheBackendCmsSolution.Modules.Tenants.Data;
 using TheBackendCmsSolution.Modules.Tenants.Models;
+using TheBackendCmsSolution.Modules.Identity;
 
 namespace TheBackendCmsSolution.Modules.Tenants.Services;
 
@@ -58,7 +59,10 @@ public class TenantServiceProviderFactory
         services.AddScoped<ITenantAccessor>(_ => new TenantAccessor { CurrentTenant = tenant });
 
         var enabled = tenant.EnabledModules ?? new List<string>();
-        var selectedModules = _modules.Where(m => enabled.Contains(m.GetType().FullName));
+        var selectedModules = _modules
+            .Where(m => enabled.Contains(m.GetType().FullName))
+            .Where(m => m is not TenancyModule &&
+                        m is not TheBackendCmsSolution.Modules.Identity.OpenIdModule);
         foreach (var module in selectedModules)
         {
             module.ConfigureServices(services, _configuration);

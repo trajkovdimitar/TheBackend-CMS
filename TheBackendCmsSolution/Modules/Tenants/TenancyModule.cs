@@ -25,6 +25,7 @@ public class TenancyModule : ICmsModule
                                    "Host=localhost;Port=5433;Database=tenantsdb;Username=postgres;Password=postgres";
             var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
             dataSourceBuilder.EnableDynamicJson();
+            dataSourceBuilder.ConnectionStringBuilder.MaxPoolSize = 20;
             options.UseNpgsql(dataSourceBuilder.Build());
         });
         services.AddScoped<ITenantResolver, TenantResolver>();
@@ -97,6 +98,7 @@ public class TenancyModule : ICmsModule
             {
                 Id = Guid.NewGuid(),
                 Name = "Default",
+                Host = "localhost",
                 ConnectionString = defaultConn,
                 EnabledModules = ModuleLoader.DiscoverModules()
                     .Select(m => m.GetType().FullName!)

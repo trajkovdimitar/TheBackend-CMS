@@ -28,6 +28,7 @@ public class ContentModule : ICmsModule
                                    "Host=localhost;Port=5432;Database=contentdb;Username=postgres;Password=postgres";
             var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
             dataSourceBuilder.EnableDynamicJson();
+            dataSourceBuilder.ConnectionStringBuilder.MaxPoolSize = 20;
             options.UseNpgsql(dataSourceBuilder.Build());
         });
     }
@@ -36,7 +37,7 @@ public class ContentModule : ICmsModule
     {
         var group = endpoints.MapGroup("");
 
-        group.MapPost("/content-types", async (ContentTypeDto dto, ContentDbContext db, ILogger<ContentModule> logger) =>
+        group.MapPost("/content-types", async (ContentTypeDto dto, [FromServices] ContentDbContext db, ILogger<ContentModule> logger) =>
         {
             var validationErrors = ValidateDto(dto, logger);
             if (validationErrors != null)
@@ -59,13 +60,13 @@ public class ContentModule : ICmsModule
             return Results.Created($"/content-types/{contentType.Id}", contentType);
         });
 
-        group.MapGet("/content-types", async (ContentDbContext db, ILogger<ContentModule> logger) =>
+        group.MapGet("/content-types", async ([FromServices] ContentDbContext db, ILogger<ContentModule> logger) =>
         {
             logger.LogInformation("Retrieving all content types");
             return await db.ContentTypes.ToListAsync();
         });
 
-        group.MapGet("/content-types/{id:guid}", async (Guid id, ContentDbContext db, ILogger<ContentModule> logger) =>
+        group.MapGet("/content-types/{id:guid}", async (Guid id, [FromServices] ContentDbContext db, ILogger<ContentModule> logger) =>
         {
             var ct = await db.ContentTypes.FindAsync(id);
             if (ct is null)
@@ -76,7 +77,7 @@ public class ContentModule : ICmsModule
             return Results.Ok(ct);
         });
 
-        group.MapPut("/content-types/{id:guid}", async (Guid id, ContentTypeDto dto, ContentDbContext db, ILogger<ContentModule> logger) =>
+        group.MapPut("/content-types/{id:guid}", async (Guid id, ContentTypeDto dto, [FromServices] ContentDbContext db, ILogger<ContentModule> logger) =>
         {
             var validationErrors = ValidateDto(dto, logger);
             if (validationErrors != null)
@@ -100,7 +101,7 @@ public class ContentModule : ICmsModule
             return Results.Ok(existing);
         });
 
-        group.MapDelete("/content-types/{id:guid}", async (Guid id, ContentDbContext db, ILogger<ContentModule> logger) =>
+        group.MapDelete("/content-types/{id:guid}", async (Guid id, [FromServices] ContentDbContext db, ILogger<ContentModule> logger) =>
         {
             var ct = await db.ContentTypes.FindAsync(id);
             if (ct is null)
@@ -114,7 +115,7 @@ public class ContentModule : ICmsModule
             return Results.NoContent();
         });
 
-        group.MapGet("/content", async (ContentDbContext db, ILogger<ContentModule> logger) =>
+        group.MapGet("/content", async ([FromServices] ContentDbContext db, ILogger<ContentModule> logger) =>
         {
             logger.LogInformation("Retrieving all content items");
             var items = await db.ContentItems
@@ -133,7 +134,7 @@ public class ContentModule : ICmsModule
             return Results.Ok(items);
         });
 
-        group.MapGet("/content/{id:guid}", async (Guid id, ContentDbContext db, ILogger<ContentModule> logger) =>
+        group.MapGet("/content/{id:guid}", async (Guid id, [FromServices] ContentDbContext db, ILogger<ContentModule> logger) =>
         {
             var item = await db.ContentItems
                 .Include(c => c.ContentType)
@@ -157,7 +158,7 @@ public class ContentModule : ICmsModule
             return Results.Ok(item);
         });
 
-        group.MapGet("/api/content/{type}", async (string type, ContentDbContext db, ILogger<ContentModule> logger) =>
+        group.MapGet("/api/content/{type}", async (string type, [FromServices] ContentDbContext db, ILogger<ContentModule> logger) =>
         {
             var contentType = await db.ContentTypes.FirstOrDefaultAsync(ct => ct.Name == type);
             if (contentType == null)
@@ -182,7 +183,7 @@ public class ContentModule : ICmsModule
             return Results.Ok(items);
         });
 
-        group.MapPost("/content", async (ContentItemDto dto, ContentDbContext db, ILogger<ContentModule> logger) =>
+        group.MapPost("/content", async (ContentItemDto dto, [FromServices] ContentDbContext db, ILogger<ContentModule> logger) =>
         {
             var validationErrors = ValidateDto(dto, logger);
             if (validationErrors != null)
@@ -212,7 +213,7 @@ public class ContentModule : ICmsModule
             return Results.Created($"/content/{item.Id}", item);
         });
 
-        group.MapPut("/content/{id:guid}", async (Guid id, ContentItemDto dto, ContentDbContext db, ILogger<ContentModule> logger) =>
+        group.MapPut("/content/{id:guid}", async (Guid id, ContentItemDto dto, [FromServices] ContentDbContext db, ILogger<ContentModule> logger) =>
         {
             var validationErrors = ValidateDto(dto, logger);
             if (validationErrors != null)
@@ -244,7 +245,7 @@ public class ContentModule : ICmsModule
             return Results.Ok(item);
         });
 
-        group.MapDelete("/content/{id:guid}", async (Guid id, ContentDbContext db, ILogger<ContentModule> logger) =>
+        group.MapDelete("/content/{id:guid}", async (Guid id, [FromServices] ContentDbContext db, ILogger<ContentModule> logger) =>
         {
             var item = await db.ContentItems.FindAsync(id);
             if (item == null)

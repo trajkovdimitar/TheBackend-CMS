@@ -16,5 +16,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../Abstractions/TheBackendCmsSolution.Modules.Abstractions.csproj" />
+    <ProjectReference Include="../Identity/TheBackendCmsSolution.Modules.Identity.csproj" />
   </ItemGroup>
 </Project>
