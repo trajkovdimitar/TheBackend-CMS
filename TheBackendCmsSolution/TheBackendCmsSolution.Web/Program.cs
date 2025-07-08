@@ -12,6 +12,12 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddOutputCache();
 
+builder.Services.AddAuthentication("Cookies").AddCookie("Cookies", options =>
+{
+    options.LoginPath = "/login";
+});
+builder.Services.AddAuthorization();
+
 builder.Services.AddHttpClient<ContentApiClient>(client =>
     {
         client.BaseAddress = new("https+http://apiservice");
@@ -30,6 +36,9 @@ app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseAntiforgery();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseOutputCache();
 

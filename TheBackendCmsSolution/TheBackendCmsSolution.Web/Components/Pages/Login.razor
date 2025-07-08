@@ -1,0 +1,53 @@
+@page "/login"
+@inject NavigationManager Nav
+@inject IHttpClientFactory ClientFactory
+
+<h1>Login</h1>
+@if (!string.IsNullOrEmpty(error))
+{
+    <div class="alert alert-danger">@error</div>
+}
+<EditForm Model="model" OnValidSubmit="HandleLogin">
+    <DataAnnotationsValidator />
+    <div class="mb-3">
+        <label class="form-label">Username</label>
+        <InputText class="form-control" @bind-Value="model.UserName" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Password</label>
+        <InputText type="password" class="form-control" @bind-Value="model.Password" />
+    </div>
+    <button class="btn btn-primary" type="submit">Login</button>
+</EditForm>
+
+@code {
+    private LoginModel model = new();
+    private string? error;
+
+    private async Task HandleLogin()
+    {
+        var client = ClientFactory.CreateClient();
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["username"] = model.UserName,
+            ["password"] = model.Password
+        });
+        var response = await client.PostAsync("/auth/login", content);
+        if (response.IsSuccessStatusCode)
+        {
+            Nav.NavigateTo("/admin/content-types", true);
+        }
+        else
+        {
+            error = "Invalid credentials";
+        }
+    }
+
+    class LoginModel
+    {
+        [Required]
+        public string UserName { get; set; } = string.Empty;
+        [Required]
+        public string Password { get; set; } = string.Empty;
+    }
+}
