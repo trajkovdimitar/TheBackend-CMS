@@ -483,4 +483,5 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 dotnet-install.sh
-\ntempkey.jwk\ntools/
+tempkey.jwk
+tools/
