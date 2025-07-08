@@ -1,6 +1,7 @@
 using TheBackendCmsSolution.Modules.Abstractions;
 using TheBackendCmsSolution.Modules.Tenants;
 using TheBackendCmsSolution.Modules.Tenants.Services;
+using TheBackendCmsSolution.Modules.OpenId;
 using System.Linq;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,16 +18,23 @@ foreach (var module in modules)
     module.ConfigureServices(builder.Services, builder.Configuration);
 }
 
+builder.Services.AddAuthentication().AddCookie();
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
 
 // Apply host-level migrations for the tenants store
 modules.OfType<TenancyModule>().FirstOrDefault()?.ApplyMigrations(app.Services);
+modules.OfType<TheBackendCmsSolution.Modules.OpenId.OpenIdModule>().FirstOrDefault()?.ApplyMigrations(app.Services);
 
 // Build per-tenant service providers
 var providerFactory = app.Services.GetRequiredService<TenantServiceProviderFactory>();
 providerFactory.InitializeAsync().GetAwaiter().GetResult();
 
 app.UseMiddleware<TheBackendCmsSolution.Modules.Tenants.TenantResolutionMiddleware>();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 foreach (var module in modules)
 {
