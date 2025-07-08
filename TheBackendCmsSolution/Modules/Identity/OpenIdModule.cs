@@ -45,6 +45,11 @@ public class OpenIdModule : ICmsModule
                        .AddDevelopmentSigningCertificate();
                 options.UseAspNetCore()
                        .EnableTokenEndpointPassthrough();
+            })
+            .AddValidation(options =>
+            {
+                options.UseLocalServer();
+                options.UseAspNetCore();
             });
     }
 
